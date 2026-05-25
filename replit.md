@@ -1,9 +1,10 @@
-# [Project name]
+# الشيخ عبدالله بن سعد آل غلفيص
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Official website for Sheikh Abdullah bin Saad Al-Ghulfayss — an Islamic educational platform with lessons, lectures, series, recitations, and contact pages.
 
 ## Run & Operate
 
+- `pnpm --filter @workspace/sheikh-site run dev` — run the frontend (assigned port via PORT env)
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
@@ -14,6 +15,7 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite, Tailwind CSS v4, react-router v7, Tajawal font (Arabic)
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
@@ -22,15 +24,26 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/sheikh-site/` — main frontend web app (served at `/`)
+  - `src/app/App.tsx` — root React component (react-router RouterProvider)
+  - `src/app/routes.tsx` — all page routes with basename from BASE_URL
+  - `src/app/components/Layout.tsx` — site-wide header + footer + nav
+  - `src/app/pages/` — one file per page (Home, Lessons, Lectures, Series, Words, Shorts, Recitations, Schedule, Contact)
+  - `src/styles/index.css` — main CSS (Google Fonts, Tailwind v4, Islamic color theme)
+- `artifacts/api-server/` — Express backend (served at `/api`)
+- `lib/api-spec/openapi.yaml` — API contract source of truth
+- `lib/db/src/schema/` — Drizzle ORM schema
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- All routing uses react-router v7's `createBrowserRouter` with `basename` set from `import.meta.env.BASE_URL` so it works behind the Replit proxy prefix.
+- Tailwind v4 uses `@theme` CSS variables for Islamic color tokens (`--color-islamic-green`, `--color-islamic-gold`, etc.) defined in `src/styles/index.css`.
+- The site is RTL (Arabic) — `<html lang="ar" dir="rtl">` is set in `index.html`.
+- No backend API is needed for the current site — it's a presentation-first app with static content.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+A multi-page Arabic Islamic educational website for Sheikh Abdullah bin Saad Al-Ghulfayss. Pages include: Home (hero + latest content grid), Lessons, Lectures, Scientific Series, Devotional Words, Miscellaneous (Recitations), Short Clips, Schedule, and Contact.
 
 ## User preferences
 
@@ -38,7 +51,9 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Do NOT run `pnpm dev` at the workspace root — no dev script exists there. Use `restart_workflow` or `pnpm --filter @workspace/<slug> run dev`.
+- `postcss.config.mjs` was removed/skipped — Tailwind v4 uses the `@tailwindcss/vite` plugin, not PostCSS config.
+- `src/App.tsx` (scaffold placeholder) is bypassed — `src/main.tsx` imports directly from `./app/App`.
 
 ## Pointers
 

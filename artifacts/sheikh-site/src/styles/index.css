@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-sans: "Tajawal", system-ui, sans-serif;
+  --font-serif: "Tajawal", system-ui, sans-serif;
+  
+  --color-islamic-green: #0a3622;
+  --color-islamic-green-light: #125336;
+  --color-islamic-green-dark: #052013;
+  --color-islamic-gold: #c5a059;
+  --color-islamic-gold-light: #dabb78;
+  --color-islamic-ivory: #fdfbf7;
+  --color-islamic-gray: #e5e3db;
+  --color-islamic-text: #2d2d2d;
+}
+
+@layer base {
+  html {
+    direction: rtl;
+    background-color: var(--color-islamic-ivory);
+    color: var(--color-islamic-text);
+  }
+}

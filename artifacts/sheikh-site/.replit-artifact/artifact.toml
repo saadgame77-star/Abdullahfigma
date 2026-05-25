@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "الشيخ عبدالله بن سعد آل غلفيص"
+version = "1.0.0"
+id = "artifacts/sheikh-site"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24740
+
+[services.development]
+run = "pnpm --filter @workspace/sheikh-site run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/sheikh-site", "run", "build" ]
+publicDir = "artifacts/sheikh-site/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24740"
+BASE_PATH = "/"
