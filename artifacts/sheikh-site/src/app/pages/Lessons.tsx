@@ -1,67 +1,298 @@
-import { Search, Filter, Play, Clock, ChevronDown } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ExternalLink,
+  Filter,
+  Library,
+  ListVideo,
+  Search,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+
+type TrustLevel = "عالٍ" | "متوسط";
+
+type ScientificSeries = {
+  id: number;
+  title: string;
+  channel: string;
+  count: string;
+  category: string;
+  section: string;
+  playlistId: string;
+  url: string;
+  trust: TrustLevel;
+  note?: string;
+};
 
 export function Lessons() {
-  const lessons = Array(6).fill(null).map((_, i) => ({
-    id: i,
-    title: `الدرس ${i + 1}: من بداية الباب إلى فصل كذا`,
-    series: "شرح زاد المستقنع",
-    duration: "45:00",
-    date: "1445/02/15",
-  }));
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState("الكل");
+
+  const scientificSeries: ScientificSeries[] = [
+    {
+      id: 1,
+      title: "التعليق على الملخص الفقهي من كتاب القضاء",
+      channel: "إبراهيم بن عبدالله الشرافي",
+      count: "2 فيديو",
+      category: "فقه / القضاء",
+      section: "الشروح العلمية",
+      playlistId: "PL28xdVEzaSCAH7OP2ObngNoUpJ1Mxl_eq",
+      url: "https://www.youtube.com/playlist?list=PL28xdVEzaSCAH7OP2ObngNoUpJ1Mxl_eq",
+      trust: "عالٍ",
+    },
+    {
+      id: 2,
+      title: "التعليق على تفسير البغوي",
+      channel: "إبراهيم بن عبدالله الشرافي",
+      count: "غير محدد",
+      category: "تفسير",
+      section: "الشروح العلمية / التفسير",
+      playlistId: "PL28xdVEzaSCA1wsUQ4uLmPWFZ7k-9cSrU",
+      url: "https://m.youtube.com/playlist?list=PL28xdVEzaSCA1wsUQ4uLmPWFZ7k-9cSrU",
+      trust: "عالٍ",
+      note: "ظهرت منها مقاطع في سورة يوسف.",
+    },
+    {
+      id: 3,
+      title: "شرح المحرر",
+      channel: "قناة السنة الدعوية / الشيخ محمد بن مبارك الشرافي",
+      count: "8 فيديو في نتيجة القائمة",
+      category: "حديث",
+      section: "الشروح العلمية / الحديث",
+      playlistId: "PL_Q00zrSooq8waFXBQdY8NC-ov2bqlLTa",
+      url: "https://m.youtube.com/playlist?list=PL_Q00zrSooq8waFXBQdY8NC-ov2bqlLTa",
+      trust: "عالٍ",
+      note: "قد توجد حلقات أخرى منفردة خارج القائمة.",
+    },
+    {
+      id: 4,
+      title: "الشرح المختصر لكتاب عمدة الأحكام / الشيخ عبدالله الغلفيص",
+      channel: "الشيخ محمد بن مبارك الشرافي",
+      count: "غير محدد",
+      category: "حديث / فقه",
+      section: "الشروح العلمية / الحديث",
+      playlistId: "PLWQYsha9_xM7Tja50Ohk1Frso9JDOK8fa",
+      url: "https://www.youtube.com/playlist?list=PLWQYsha9_xM7Tja50Ohk1Frso9JDOK8fa",
+      trust: "عالٍ",
+    },
+    {
+      id: 5,
+      title: "التعليق على المنظومة الميمية للحافظ بن أحمد حكمي",
+      channel: "عبدالله بن سعد آل غلفيص / الشيخ محمد الشرافي",
+      count: "غير محدد",
+      category: "آداب العلم / وصايا",
+      section: "الشروح العلمية",
+      playlistId: "PLGMk6zGE-urWamKf-gWF7nBAxa6EGe4Lx",
+      url: "https://www.youtube.com/playlist?list=PLGMk6zGE-urWamKf-gWF7nBAxa6EGe4Lx",
+      trust: "عالٍ",
+    },
+    {
+      id: 6,
+      title: "التعليق على كتاب العلم",
+      channel: "عبدالله بن سعد آل غلفيص",
+      count: "7 فيديو",
+      category: "آداب طلب العلم",
+      section: "الشروح العلمية",
+      playlistId: "PLGMk6zGE-urWquDwXCELU_mdcJEgn2MoK",
+      url: "https://www.youtube.com/playlist?list=PLGMk6zGE-urWquDwXCELU_mdcJEgn2MoK",
+      trust: "عالٍ",
+    },
+    {
+      id: 7,
+      title: "التعليق على تفسير البغوي",
+      channel: "عبدالله بن سعد آل غلفيص",
+      count: "15 فيديو",
+      category: "تفسير",
+      section: "الشروح العلمية / التفسير",
+      playlistId: "PLGMk6zGE-urVbxaRdViZaKhRvbNNLKGGa",
+      url: "https://www.youtube.com/playlist?list=PLGMk6zGE-urVbxaRdViZaKhRvbNNLKGGa",
+      trust: "عالٍ",
+    },
+  ];
+
+  const categories = ["الكل", "تفسير", "حديث", "فقه", "آداب العلم"];
+
+  const filteredSeries = useMemo(() => {
+    return scientificSeries.filter((series) => {
+      const matchesSearch =
+        searchTerm.trim() === "" ||
+        series.title.includes(searchTerm) ||
+        series.channel.includes(searchTerm) ||
+        series.category.includes(searchTerm);
+
+      const matchesCategory =
+        activeCategory === "الكل" || series.category.includes(activeCategory);
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [activeCategory, searchTerm]);
 
   return (
     <div className="container mx-auto px-4 py-12 animate-in fade-in duration-500">
       <div className="mb-10 text-center">
-        <h1 className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4">الدروس العلمية</h1>
+        <h1 className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4">
+          الدروس العلمية
+        </h1>
         <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
-        <p className="text-gray-600 max-w-2xl mx-auto">مكتبة شاملة للدروس المنهجية والشروحات العلمية، مصنفة ومنظمة لتسهيل طلب العلم.</p>
+        <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          مكتبة شاملة للدروس المنهجية والشروح العلمية، تجمع السلاسل العلمية
+          وقوائم التشغيل في صفحة واحدة منظمة لتسهيل طلب العلم.
+        </p>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-sm shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row gap-4">
-        <div className="relative flex-grow">
-          <input 
-            type="text" 
-            placeholder="البحث في الدروس..." 
+      <div className="bg-white p-4 rounded-sm shadow-sm border border-gray-100 mb-10 flex flex-col gap-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="البحث في الدروس والشروح..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
             className="w-full bg-gray-50 border border-gray-200 rounded-sm py-3 px-4 pr-12 focus:outline-none focus:border-[var(--color-islamic-gold)] focus:ring-1 focus:ring-[var(--color-islamic-gold)] transition-all"
           />
           <Search className="absolute right-4 top-3.5 text-gray-400 w-5 h-5" />
         </div>
-        
-        <div className="flex gap-4">
-          <button className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-6 py-3 rounded-sm text-gray-700 hover:bg-gray-100 transition-colors whitespace-nowrap">
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 text-sm text-gray-600 ml-2">
             <Filter className="w-4 h-4" />
-            تصنيف حسب
-            <ChevronDown className="w-4 h-4" />
-          </button>
+            تصفية حسب الباب:
+          </div>
+
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
+                activeCategory === category
+                  ? "bg-[var(--color-islamic-green)] text-white"
+                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {lessons.map((lesson) => (
-          <div key={lesson.id} className="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
-            <div className="aspect-video bg-gray-100 relative flex items-center justify-center border-b border-gray-100">
-              <Play className="w-12 h-12 text-gray-300 group-hover:text-[var(--color-islamic-gold)] transition-colors group-hover:scale-110 duration-300" />
-              <div className="absolute top-3 right-3 bg-[var(--color-islamic-green)] text-white text-xs px-2 py-1 rounded-sm">{lesson.series}</div>
-            </div>
-            <div className="p-5">
-              <h3 className="font-bold text-lg mb-2 text-gray-800 line-clamp-2">{lesson.title}</h3>
-              <div className="flex items-center justify-between text-sm text-gray-500 mt-4 pt-4 border-t border-gray-50">
-                <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {lesson.duration}</span>
-                <span>{lesson.date}</span>
-              </div>
-            </div>
+      {/* Scientific Series Section */}
+      <section className="mb-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b-2 border-gray-200 pb-4">
+          <div>
+            <span className="text-[var(--color-islamic-gold)] font-serif text-xl block mb-2">
+              السلاسل والشروح
+            </span>
+            <h2 className="font-serif text-3xl text-[var(--color-islamic-green-dark)] font-bold">
+              قوائم تشغيل علمية مضمّنة
+            </h2>
           </div>
-        ))}
-      </div>
-      
-      {/* Pagination (Static) */}
-      <div className="flex justify-center mt-12 gap-2">
-        <button className="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-sm bg-white text-gray-600 hover:bg-gray-50">1</button>
-        <button className="w-10 h-10 flex items-center justify-center border border-[var(--color-islamic-gold)] rounded-sm bg-[var(--color-islamic-gold)] text-white">2</button>
-        <button className="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-sm bg-white text-gray-600 hover:bg-gray-50">3</button>
-      </div>
+          <p className="text-sm text-gray-500 max-w-xl leading-relaxed">
+            يتم عرض قوائم التشغيل داخل الصفحة مباشرة، مع رابط خارجي للمصدر على
+            يوتيوب عند الحاجة.
+          </p>
+        </div>
+
+        {filteredSeries.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {filteredSeries.map((series) => (
+              <article
+                key={series.id}
+                className="bg-white border border-gray-200 rounded-sm shadow-sm hover:shadow-md transition-all overflow-hidden group"
+              >
+                <div className="aspect-video bg-gray-900">
+                  <iframe
+                    className="w-full h-full"
+                    src={`https://www.youtube.com/embed/videoseries?list=${series.playlistId}`}
+                    title={series.title}
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+
+                <div className="p-6">
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-[var(--color-islamic-green)] text-white font-medium">
+                      <Library className="w-3.5 h-3.5" />
+                      {series.section}
+                    </span>
+
+                    <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-gray-100 text-gray-700 font-medium">
+                      <ListVideo className="w-3.5 h-3.5" />
+                      {series.count}
+                    </span>
+
+                    {series.trust === "متوسط" ? (
+                      <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-amber-100 text-amber-800 font-bold">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        بحاجة تحقق
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-green-100 text-green-800 font-bold">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        موثوق
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="font-serif text-2xl font-bold text-gray-800 leading-relaxed mb-4 group-hover:text-[var(--color-islamic-green)] transition-colors">
+                    {series.title}
+                  </h3>
+
+                  <div className="space-y-2 text-sm text-gray-600 mb-5">
+                    <p>
+                      <span className="font-bold text-gray-700">القناة: </span>
+                      {series.channel}
+                    </p>
+                    <p>
+                      <span className="font-bold text-gray-700">
+                        باب العلم:{" "}
+                      </span>
+                      {series.category}
+                    </p>
+                    {series.note && (
+                      <p className="leading-relaxed text-gray-500 border-r-2 border-[var(--color-islamic-gold)] pr-3">
+                        {series.note}
+                      </p>
+                    )}
+                  </div>
+
+                  <a
+                    href={series.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 bg-white border border-[var(--color-islamic-green)] text-[var(--color-islamic-green)] px-5 py-2 rounded-sm hover:bg-[var(--color-islamic-green)] hover:text-white transition-colors font-medium"
+                  >
+                    فتح القائمة في يوتيوب
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-sm p-8 text-center text-gray-500">
+            لا توجد نتائج مطابقة للبحث أو التصنيف المحدد.
+          </div>
+        )}
+      </section>
+
+      {/* Individual Lessons Placeholder */}
+      <section className="bg-white border border-gray-200 rounded-sm p-8 shadow-sm">
+        <div className="text-center max-w-3xl mx-auto">
+          <span className="inline-flex items-center gap-2 text-[var(--color-islamic-gold)] font-serif text-xl mb-3">
+            <ListVideo className="w-5 h-5" />
+            الدروس المفردة
+          </span>
+          <h2 className="font-serif text-3xl text-[var(--color-islamic-green-dark)] font-bold mb-4">
+            سيتم تنظيم الدروس المفردة في المرحلة التالية
+          </h2>
+          <p className="text-gray-600 leading-relaxed">
+            بعد تثبيت السلاسل العلمية داخل هذه الصفحة، سنضيف المقاطع المفردة من
+            الفهرس ونرتبها حسب الكتاب أو الباب العلمي أو التصنيف المناسب.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

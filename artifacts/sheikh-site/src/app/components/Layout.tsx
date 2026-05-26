@@ -9,7 +9,6 @@ import {
   Phone,
   Menu,
   X,
-  Library,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -27,11 +26,6 @@ export function Layout() {
       name: "المحاضرات",
       path: "/lectures",
       icon: <PlaySquare className="w-4 h-4" />,
-    },
-    {
-      name: "السلاسل العلمية",
-      path: "/series",
-      icon: <Library className="w-4 h-4" />,
     },
     {
       name: "الكلمات الدعوية",
@@ -166,8 +160,9 @@ export function Layout() {
                 </h2>
               </div>
               <p className="leading-relaxed text-sm opacity-80 max-w-sm">
-                منصة علمية تعنى بنشر الدروس، والمحاضرات، والسلاسل العلمية،
-                والمقاطع المختارة، لتكون مرجعًا موثوقًا لطالبي العلم.
+                منصة علمية تعنى بنشر الدروس والشروح العلمية، والمحاضرات،
+                والكلمات الدعوية، والمقاطع المختارة، لتكون مرجعًا موثوقًا لطالبي
+                العلم.
               </p>
             </div>
 
@@ -187,11 +182,11 @@ export function Layout() {
                 </li>
                 <li>
                   <Link
-                    to="/series"
+                    to="/lectures"
                     className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
                   >
                     <span className="text-[var(--color-islamic-gold)]">▪</span>{" "}
-                    السلاسل العلمية
+                    المحاضرات
                   </Link>
                 </li>
                 <li>
