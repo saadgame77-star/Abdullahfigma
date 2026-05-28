@@ -1,251 +1,888 @@
 import {
   BookOpen,
+  CalendarDays,
   CheckCircle2,
   Clock,
   Edit3,
-  Eye,
-  FileText,
+  ExternalLink,
+  FolderTree,
+  Hash,
   LayoutDashboard,
+  ListChecks,
   ListVideo,
+  Mail,
+  Megaphone,
+  Mic2,
   Plus,
   Search,
   Settings,
   ShieldCheck,
+  SlidersHorizontal,
+  Tags,
   Trash2,
+  UserCog,
   Video,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { scientificSeries } from "../data/scientificSeries";
 import { shortClips } from "../data/shortClips";
 
+type AdminSection =
+  | "overview"
+  | "series"
+  | "shorts"
+  | "lectures"
+  | "words"
+  | "schedule"
+  | "knowledge"
+  | "tags"
+  | "supervisors"
+  | "settings";
+
+type PermissionKey =
+  | "manageSeries"
+  | "manageShorts"
+  | "manageLectures"
+  | "manageWords"
+  | "manageSchedule"
+  | "manageKnowledge"
+  | "manageTags"
+  | "publishContent"
+  | "hideContent"
+  | "deleteContent"
+  | "manageSupervisors"
+  | "editSettings";
+
+type ContentStatus =
+  | "منشور"
+  | "مسودة"
+  | "مخفي"
+  | "مكتملة"
+  | "قيد الاكتمال"
+  | "مجدول"
+  | "متوقف"
+  | "مؤجل";
+
+type ContentItem = {
+  id: string;
+  section: AdminSection;
+  title: string;
+  type: string;
+  category: string;
+  status: ContentStatus;
+  source?: string;
+  meta?: string;
+  url?: string;
+  tags: string[];
+};
+
+type KnowledgeCategory = {
+  id: string;
+  name: string;
+  children: string[];
+};
+
+type Supervisor = {
+  id: number;
+  name: string;
+  email: string;
+  permissions: PermissionKey[];
+  status: "نشط" | "موقوف";
+};
+
+const adminSections = [
+  {
+    key: "overview" as const,
+    title: "نظرة عامة",
+    description: "ملخص سريع عن محتوى الموقع وحالته.",
+    icon: LayoutDashboard,
+  },
+  {
+    key: "series" as const,
+    title: "السلاسل العلمية",
+    description: "إدارة السلاسل العلمية المكتملة وقيد الاكتمال.",
+    icon: ListVideo,
+  },
+  {
+    key: "shorts" as const,
+    title: "المقاطع القصيرة",
+    description: "فوائد مختصرة لا تتجاوز ثلاث دقائق.",
+    icon: Video,
+  },
+  {
+    key: "lectures" as const,
+    title: "المحاضرات",
+    description: "المحاضرات العامة واللقاءات العلمية.",
+    icon: Mic2,
+  },
+  {
+    key: "words" as const,
+    title: "الكلمات الدعوية",
+    description: "الكلمات والمواعظ والتوجيهات العامة.",
+    icon: Megaphone,
+  },
+  {
+    key: "schedule" as const,
+    title: "الجدول",
+    description: "مواعيد الدروس والمحاضرات والبرامج.",
+    icon: CalendarDays,
+  },
+  {
+    key: "knowledge" as const,
+    title: "أبواب العلم",
+    description: "تصنيفات علمية منهجية قابلة للتعديل.",
+    icon: FolderTree,
+  },
+  {
+    key: "tags" as const,
+    title: "الوسوم",
+    description: "وسوم تساعد البحث والربط بين المواد.",
+    icon: Tags,
+  },
+  {
+    key: "supervisors" as const,
+    title: "المشرفون والصلاحيات",
+    description: "منح كل مشرف مهام وصلاحيات مخصصة.",
+    icon: UserCog,
+  },
+  {
+    key: "settings" as const,
+    title: "الإعدادات",
+    description: "إعدادات الموقع العامة.",
+    icon: Settings,
+  },
+];
+
+const permissionGroups: Array<{
+  title: string;
+  permissions: Array<{ key: PermissionKey; label: string }>;
+}> = [
+  {
+    title: "إدارة المحتوى",
+    permissions: [
+      { key: "manageSeries", label: "إدارة السلاسل العلمية" },
+      { key: "manageShorts", label: "إدارة المقاطع القصيرة" },
+      { key: "manageLectures", label: "إدارة المحاضرات" },
+      { key: "manageWords", label: "إدارة الكلمات الدعوية" },
+      { key: "manageSchedule", label: "إدارة الجدول" },
+    ],
+  },
+  {
+    title: "التصنيف والبحث",
+    permissions: [
+      { key: "manageKnowledge", label: "إدارة أبواب العلم" },
+      { key: "manageTags", label: "إدارة الوسوم" },
+    ],
+  },
+  {
+    title: "النشر والتحكم",
+    permissions: [
+      { key: "publishContent", label: "نشر المحتوى" },
+      { key: "hideContent", label: "إخفاء المحتوى" },
+      { key: "deleteContent", label: "حذف المحتوى" },
+    ],
+  },
+  {
+    title: "الإدارة العليا",
+    permissions: [
+      { key: "manageSupervisors", label: "إدارة المشرفين" },
+      { key: "editSettings", label: "تعديل إعدادات الموقع" },
+    ],
+  },
+];
+
+const knowledgeCategories: KnowledgeCategory[] = [
+  {
+    id: "tafsir",
+    name: "التفسير وعلوم القرآن",
+    children: ["تفسير القرآن", "شروح كتب التفسير", "فوائد تفسيرية"],
+  },
+  {
+    id: "hadith",
+    name: "الحديث وعلومه",
+    children: ["شروح كتب الحديث", "أحاديث الأحكام", "مصطلح الحديث"],
+  },
+  {
+    id: "fiqh",
+    name: "الفقه",
+    children: ["العبادات", "المعاملات", "الأسرة", "القضاء"],
+  },
+  {
+    id: "aqidah",
+    name: "العقيدة",
+    children: ["التوحيد", "الإيمان", "الردود العلمية"],
+  },
+  {
+    id: "adab",
+    name: "آداب العلم والتربية",
+    children: ["طلب العلم", "آداب المتعلم", "الوصايا"],
+  },
+  {
+    id: "raqaiq",
+    name: "الرقائق والآداب",
+    children: ["المواعظ", "حسن الخلق", "تزكية النفس"],
+  },
+];
+
+const tags = [
+  "تفسير",
+  "البغوي",
+  "عمدة الأحكام",
+  "طلب العلم",
+  "القضاء",
+  "حسن الخلق",
+  "الوصية",
+  "الجمعة",
+  "الطلاق",
+  "الإيمان",
+  "آداب العلم",
+];
+
+const supervisors: Supervisor[] = [
+  {
+    id: 1,
+    name: "المشرف العام",
+    email: "admin@example.com",
+    status: "نشط",
+    permissions: [
+      "manageSeries",
+      "manageShorts",
+      "manageLectures",
+      "manageWords",
+      "manageSchedule",
+      "manageKnowledge",
+      "manageTags",
+      "publishContent",
+      "hideContent",
+      "deleteContent",
+      "manageSupervisors",
+      "editSettings",
+    ],
+  },
+  {
+    id: 2,
+    name: "مدخل المحتوى",
+    email: "content@example.com",
+    status: "نشط",
+    permissions: ["manageSeries", "manageShorts", "manageTags"],
+  },
+];
+
+function statusClass(status: string) {
+  if (
+    status === "مسودة" ||
+    status === "مخفي" ||
+    status === "قيد الاكتمال" ||
+    status === "متوقف" ||
+    status === "مؤجل"
+  ) {
+    return "bg-amber-100 text-amber-800";
+  }
+
+  return "bg-green-100 text-green-800";
+}
+
+function getPermissionLabel(permission: PermissionKey) {
+  for (const group of permissionGroups) {
+    const found = group.permissions.find((item) => item.key === permission);
+    if (found) return found.label;
+  }
+
+  return permission;
+}
+
 export function Admin() {
-  const completedSeriesCount = scientificSeries.filter(
+  const [activeSection, setActiveSection] = useState<AdminSection>("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const contentItems: ContentItem[] = useMemo(() => {
+    const seriesItems: ContentItem[] = scientificSeries.map((series) => ({
+      id: `series-${series.id}`,
+      section: "series",
+      title: series.title,
+      type: "سلسلة علمية",
+      category: series.category,
+      status: series.status === "مكتملة" ? "مكتملة" : "قيد الاكتمال",
+      source: series.channel,
+      meta: series.count,
+      url: series.url,
+      tags: [
+        series.category.split("/")[0]?.trim() || "دروس علمية",
+        "سلسلة علمية",
+      ],
+    }));
+
+    const shortItems: ContentItem[] = shortClips.map((clip) => ({
+      id: `short-${clip.id}`,
+      section: "shorts",
+      title: clip.title,
+      type: "مقطع قصير",
+      category: clip.category,
+      status: "منشور",
+      source: clip.channel,
+      meta: clip.duration,
+      url: clip.url,
+      tags: [clip.category, "مقطع قصير"],
+    }));
+
+    const scheduleItems: ContentItem[] = [
+      {
+        id: "schedule-1",
+        section: "schedule",
+        title: "درس أسبوعي",
+        type: "موعد متكرر",
+        category: "جدول الدروس",
+        status: "مجدول",
+        source: "المسجد / رابط البث عند الحاجة",
+        meta: "مرن: يحدد اليوم والوقت والتكرار من لوحة التحكم",
+        tags: ["جدول", "موعد"],
+      },
+    ];
+
+    return [...seriesItems, ...shortItems, ...scheduleItems];
+  }, []);
+
+  const activeInfo =
+    adminSections.find((section) => section.key === activeSection) ??
+    adminSections[0];
+
+  const visibleItems = contentItems.filter((item) => {
+    const isCurrentSection = item.section === activeSection;
+
+    const matchesSearch =
+      searchTerm.trim() === "" ||
+      item.title.includes(searchTerm) ||
+      item.type.includes(searchTerm) ||
+      item.category.includes(searchTerm) ||
+      item.status.includes(searchTerm) ||
+      (item.source ?? "").includes(searchTerm) ||
+      item.tags.some((tag) => tag.includes(searchTerm));
+
+    return isCurrentSection && matchesSearch;
+  });
+
+  const completedSeries = scientificSeries.filter(
     (series) => series.status === "مكتملة",
   ).length;
 
-  const incompleteSeriesCount = scientificSeries.filter(
-    (series) => series.status === "غير مكتملة",
-  ).length;
+  const inProgressSeries = scientificSeries.length - completedSeries;
 
   const stats = [
     {
-      title: "السلاسل العلمية",
-      value: scientificSeries.length.toString(),
+      label: "السلاسل العلمية",
+      value: scientificSeries.length,
+      hint: "مكتملة وقيد الاكتمال",
       icon: ListVideo,
     },
     {
-      title: "السلاسل المكتملة",
-      value: completedSeriesCount.toString(),
+      label: "السلاسل المكتملة",
+      value: completedSeries,
+      hint: "جاهزة للعرض المنظم",
       icon: CheckCircle2,
     },
     {
-      title: "السلاسل غير المكتملة",
-      value: incompleteSeriesCount.toString(),
+      label: "قيد الاكتمال",
+      value: inProgressSeries,
+      hint: "سلاسل مستمرة",
       icon: Clock,
     },
     {
-      title: "المقاطع القصيرة",
-      value: shortClips.length.toString(),
+      label: "المقاطع القصيرة",
+      value: shortClips.length,
+      hint: "لا تتجاوز ثلاث دقائق",
       icon: Video,
     },
   ];
 
-  const contentSections = [
-    {
-      title: "إدارة السلاسل العلمية",
-      description: "إضافة وتعديل السلاسل، وتحديد حالتها: مكتملة أو غير مكتملة.",
-      icon: ListVideo,
-    },
-    {
-      title: "إدارة الدروس العلمية",
-      description: "تنظيم الدروس المفردة حسب الكتاب، الباب العلمي، والتصنيف.",
-      icon: BookOpen,
-    },
-    {
-      title: "إدارة المقاطع القصيرة",
-      description: "إضافة الفوائد المختصرة التي لا تتجاوز ثلاث دقائق.",
-      icon: Video,
-    },
-    {
-      title: "إدارة الكلمات والمقالات",
-      description: "رفع النصوص، المقالات، الكلمات، والمواد المكتوبة.",
-      icon: FileText,
-    },
-  ];
+  function sectionCount(section: AdminSection) {
+    if (section === "overview") return contentItems.length;
+    if (section === "knowledge") return knowledgeCategories.length;
+    if (section === "tags") return tags.length;
+    if (section === "supervisors") return supervisors.length;
+    if (section === "settings") return 0;
 
-  const latestContent = [
-    ...scientificSeries.slice(0, 3).map((series) => ({
-      title: series.title,
-      type: "سلسلة علمية",
-      status: series.status,
-    })),
-    ...shortClips.slice(0, 2).map((clip) => ({
-      title: clip.title,
-      type: "مقطع قصير",
-      status: "منشور",
-    })),
-  ];
+    return contentItems.filter((item) => item.section === section).length;
+  }
 
   return (
-    <div className="container mx-auto px-4 py-12 animate-in fade-in duration-500">
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="w-12 h-12 rounded-sm bg-[var(--color-islamic-green)] text-white flex items-center justify-center">
-            <LayoutDashboard className="w-6 h-6" />
-          </span>
-          <div>
-            <h1 className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold">
-              لوحة التحكم
-            </h1>
-            <p className="text-gray-600 mt-2">
-              مساحة مبدئية لإدارة محتوى الموقع وتنظيم المواد العلمية.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
-        {stats.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <div
-              key={item.title}
-              className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <Icon className="w-6 h-6 text-[var(--color-islamic-gold)]" />
-                <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-                  {item.value}
-                </span>
-              </div>
-              <p className="text-sm text-gray-600">{item.title}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm mb-10">
-        <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="البحث في محتوى لوحة التحكم..."
-              className="w-full bg-gray-50 border border-gray-200 rounded-sm py-3 px-4 pr-12 focus:outline-none focus:border-[var(--color-islamic-gold)] focus:ring-1 focus:ring-[var(--color-islamic-gold)] transition-all"
-            />
-            <Search className="absolute right-4 top-3.5 text-gray-400 w-5 h-5" />
-          </div>
-
-          <button className="inline-flex items-center justify-center gap-2 bg-[var(--color-islamic-green)] text-white px-5 py-3 rounded-sm font-medium hover:bg-[var(--color-islamic-green-dark)] transition-colors">
-            <Plus className="w-5 h-5" />
-            إضافة محتوى جديد
-          </button>
-        </div>
-      </div>
-
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6 border-b-2 border-gray-200 pb-4">
-          <div>
-            <span className="text-[var(--color-islamic-gold)] font-serif text-xl block mb-2">
-              أقسام الإدارة
+    <div className="min-h-screen bg-[var(--color-islamic-ivory)]">
+      <div className="container mx-auto px-4 py-10">
+        <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-sm bg-[var(--color-islamic-green)] text-white">
+              <LayoutDashboard className="h-6 w-6" />
             </span>
-            <h2 className="font-serif text-3xl text-[var(--color-islamic-green-dark)] font-bold">
-              إدارة محتوى الموقع
-            </h2>
-          </div>
-          <Settings className="w-7 h-7 text-gray-400" />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {contentSections.map((section) => {
-            const Icon = section.icon;
+            <div>
+              <h1 className="font-serif text-4xl font-bold text-[var(--color-islamic-green-dark)]">
+                لوحة التحكم
+              </h1>
+              <p className="mt-2 text-gray-600">
+                لوحة مرنة لإدارة المحتوى العلمي والدعوي، والتصنيفات، والوسوم،
+                والمشرفين حسب المهام والصلاحيات.
+              </p>
+            </div>
+          </div>
+
+          <a
+            href="/"
+            className="inline-flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          >
+            <ExternalLink className="h-4 w-4" />
+            عرض الموقع
+          </a>
+        </header>
+
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
 
             return (
-              <article
-                key={section.title}
-                className="bg-white border border-gray-200 rounded-sm p-6 shadow-sm hover:shadow-md transition-all"
+              <div
+                key={stat.label}
+                className="rounded-sm border border-gray-200 bg-white p-5 shadow-sm"
               >
-                <div className="flex items-start gap-4">
-                  <span className="w-12 h-12 rounded-sm bg-[var(--color-islamic-ivory)] border border-gray-200 flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-[var(--color-islamic-green)]" />
+                <div className="mb-3 flex items-center justify-between">
+                  <Icon className="h-6 w-6 text-[var(--color-islamic-gold)]" />
+                  <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                    {stat.value}
                   </span>
-
-                  <div className="flex-1">
-                    <h3 className="font-serif text-2xl font-bold text-gray-800 mb-2">
-                      {section.title}
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed mb-5">
-                      {section.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                      <button className="inline-flex items-center gap-2 border border-[var(--color-islamic-green)] text-[var(--color-islamic-green)] px-4 py-2 rounded-sm text-sm font-medium hover:bg-[var(--color-islamic-green)] hover:text-white transition-colors">
-                        <Eye className="w-4 h-4" />
-                        استعراض
-                      </button>
-                      <button className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-50 transition-colors">
-                        <Edit3 className="w-4 h-4" />
-                        تعديل
-                      </button>
-                    </div>
-                  </div>
                 </div>
-              </article>
+                <p className="text-sm font-bold text-gray-700">{stat.label}</p>
+                <p className="mt-1 text-xs text-gray-500">{stat.hint}</p>
+              </div>
             );
           })}
         </div>
-      </section>
 
-      <section className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-            آخر عناصر المحتوى
-          </h2>
-          <Clock className="w-5 h-5 text-gray-400" />
-        </div>
-
-        <div className="divide-y divide-gray-100">
-          {latestContent.map((item) => (
-            <div
-              key={`${item.type}-${item.title}`}
-              className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-            >
-              <div>
-                <h3 className="font-bold text-gray-800 mb-1">{item.title}</h3>
-                <p className="text-sm text-gray-500">{item.type}</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span
-                  className={`inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm font-bold ${
-                    item.status === "غير مكتملة"
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-green-100 text-green-800"
-                  }`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  {item.status}
-                </span>
-
-                <button className="p-2 text-gray-500 hover:text-[var(--color-islamic-green)]">
-                  <Edit3 className="w-4 h-4" />
-                </button>
-
-                <button className="p-2 text-gray-500 hover:text-red-600">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_1fr]">
+          <aside className="rounded-sm border border-gray-200 bg-white p-3 shadow-sm">
+            <div className="mb-3 px-3 py-2">
+              <p className="text-sm font-bold text-gray-500">
+                أقسام لوحة التحكم
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
 
-      <div className="mt-10 bg-[var(--color-islamic-ivory)] border border-gray-200 rounded-sm p-5">
-        <div className="flex items-start gap-3">
-          <ShieldCheck className="w-6 h-6 text-[var(--color-islamic-green)] mt-1" />
-          <p className="text-gray-600 leading-relaxed">
-            هذه لوحة تحكم مبدئية مرتبطة الآن بملفات بيانات الموقع. في المرحلة
-            القادمة يمكن تحويل أزرار الإضافة والتعديل إلى نماذج فعلية، ثم ربطها
-            لاحقًا بتسجيل دخول وقاعدة بيانات.
+            <div className="space-y-1">
+              {adminSections.map((section) => {
+                const Icon = section.icon;
+                const isActive = activeSection === section.key;
+
+                return (
+                  <button
+                    key={section.key}
+                    onClick={() => {
+                      setActiveSection(section.key);
+                      setSearchTerm("");
+                    }}
+                    className={`flex w-full items-center justify-between rounded-sm px-3 py-3 text-right transition-colors ${
+                      isActive
+                        ? "bg-[var(--color-islamic-green)] text-white"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Icon
+                        className={`h-5 w-5 ${
+                          isActive
+                            ? "text-[var(--color-islamic-gold)]"
+                            : "text-[var(--color-islamic-green)]"
+                        }`}
+                      />
+                      <span className="text-sm font-bold">{section.title}</span>
+                    </span>
+
+                    {section.key !== "settings" && (
+                      <span
+                        className={`rounded-sm px-2 py-0.5 text-xs font-bold ${
+                          isActive
+                            ? "bg-white/15 text-white"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {sectionCount(section.key)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+
+          <main className="rounded-sm border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-200 p-5">
+              <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <span className="mb-1 block font-serif text-lg text-[var(--color-islamic-gold)]">
+                    {activeInfo.title}
+                  </span>
+                  <h2 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)]">
+                    {activeInfo.description}
+                  </h2>
+                </div>
+
+                {activeSection !== "overview" && (
+                  <button className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]">
+                    <Plus className="h-4 w-4" />
+                    إضافة جديد
+                  </button>
+                )}
+              </div>
+
+              {activeSection !== "overview" && (
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="ابحث في هذا القسم..."
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    className="w-full rounded-sm border border-gray-200 bg-gray-50 px-4 py-3 pr-12 transition-all focus:border-[var(--color-islamic-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-islamic-gold)]"
+                  />
+                  <Search className="absolute right-4 top-3.5 h-5 w-5 text-gray-400" />
+                </div>
+              )}
+            </div>
+
+            {activeSection === "overview" && (
+              <section className="p-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="rounded-sm border border-gray-200 p-5">
+                    <div className="mb-4 flex items-center gap-2">
+                      <ListChecks className="h-5 w-5 text-[var(--color-islamic-gold)]" />
+                      <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                        نموذج إدارة المحتوى
+                      </h3>
+                    </div>
+                    <p className="leading-relaxed text-gray-600">
+                      الدروس العلمية تدار كسلاسل علمية فقط، ولا توجد دروس مفردة
+                      خارج السلاسل. كل سلسلة لها حالة: مكتملة أو قيد الاكتمال،
+                      وترتبط بباب علم، وتصنيف فرعي، ووسوم.
+                    </p>
+                  </div>
+
+                  <div className="rounded-sm border border-gray-200 p-5">
+                    <div className="mb-4 flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-[var(--color-islamic-gold)]" />
+                      <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                        الصلاحيات حسب المهام
+                      </h3>
+                    </div>
+                    <p className="leading-relaxed text-gray-600">
+                      لا تعتمد اللوحة على أدوار ثابتة، بل يمكن منح كل مشرف
+                      المهام والصلاحيات المناسبة له بشكل مستقل، مثل إدارة
+                      السلاسل أو الوسوم أو الجدول أو النشر.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-sm border border-gray-200 p-5">
+                  <h3 className="mb-4 font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                    آخر عناصر المحتوى
+                  </h3>
+
+                  <div className="divide-y divide-gray-100">
+                    {contentItems.slice(0, 5).map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between"
+                      >
+                        <div>
+                          <p className="font-bold text-gray-800">
+                            {item.title}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {item.type} — {item.category}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`w-fit rounded-sm px-3 py-1 text-xs font-bold ${statusClass(
+                            item.status,
+                          )}`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {["series", "shorts", "lectures", "words", "schedule"].includes(
+              activeSection,
+            ) && (
+              <section className="overflow-x-auto">
+                <table className="w-full min-w-[820px] text-right">
+                  <thead className="bg-gray-50 text-sm text-gray-500">
+                    <tr>
+                      <th className="px-5 py-3 font-bold">العنوان</th>
+                      <th className="px-5 py-3 font-bold">النوع</th>
+                      <th className="px-5 py-3 font-bold">باب العلم</th>
+                      <th className="px-5 py-3 font-bold">الحالة</th>
+                      <th className="px-5 py-3 font-bold">الوسوم</th>
+                      <th className="px-5 py-3 font-bold">الإجراءات</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-100">
+                    {visibleItems.length > 0 ? (
+                      visibleItems.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="align-top transition-colors hover:bg-gray-50"
+                        >
+                          <td className="px-5 py-4">
+                            <p className="font-bold text-gray-800">
+                              {item.title}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              {item.source || "لا يوجد مصدر محدد"}
+                              {item.meta ? ` — ${item.meta}` : ""}
+                            </p>
+                          </td>
+
+                          <td className="px-5 py-4 text-sm text-gray-600">
+                            {item.type}
+                          </td>
+
+                          <td className="px-5 py-4 text-sm text-gray-600">
+                            {item.category}
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex rounded-sm px-3 py-1 text-xs font-bold ${statusClass(
+                                item.status,
+                              )}`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <div className="flex flex-wrap gap-1">
+                              {item.tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="rounded-sm bg-gray-100 px-2 py-1 text-xs text-gray-600"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-2">
+                              {item.url && (
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="rounded-sm p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[var(--color-islamic-green)]"
+                                  title="فتح الرابط"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              )}
+
+                              <button className="rounded-sm p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[var(--color-islamic-green)]">
+                                <Edit3 className="h-4 w-4" />
+                              </button>
+
+                              <button className="rounded-sm p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600">
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-5 py-12 text-center text-gray-500"
+                        >
+                          لا توجد عناصر في هذا القسم حاليًا.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </section>
+            )}
+
+            {activeSection === "knowledge" && (
+              <section className="p-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {knowledgeCategories.map((category) => (
+                    <article
+                      key={category.id}
+                      className="rounded-sm border border-gray-200 p-5"
+                    >
+                      <div className="mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FolderTree className="h-5 w-5 text-[var(--color-islamic-gold)]" />
+                          <h3 className="font-serif text-xl font-bold text-[var(--color-islamic-green-dark)]">
+                            {category.name}
+                          </h3>
+                        </div>
+
+                        <div className="flex gap-1">
+                          <button className="rounded-sm p-2 text-gray-500 hover:bg-gray-100">
+                            <Edit3 className="h-4 w-4" />
+                          </button>
+                          <button className="rounded-sm p-2 text-gray-500 hover:bg-red-50 hover:text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {category.children.map((child) => (
+                          <span
+                            key={child}
+                            className="rounded-sm bg-[var(--color-islamic-ivory)] px-3 py-1 text-sm text-gray-700"
+                          >
+                            {child}
+                          </span>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {activeSection === "tags" && (
+              <section className="p-5">
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-2 rounded-sm border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
+                    >
+                      <Hash className="h-4 w-4 text-[var(--color-islamic-gold)]" />
+                      {tag}
+                      <button className="text-gray-400 hover:text-[var(--color-islamic-green)]">
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {activeSection === "supervisors" && (
+              <section className="p-5">
+                <div className="space-y-5">
+                  {supervisors.map((supervisor) => (
+                    <article
+                      key={supervisor.id}
+                      className="rounded-sm border border-gray-200 p-5"
+                    >
+                      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                            {supervisor.name}
+                          </h3>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {supervisor.email}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`w-fit rounded-sm px-3 py-1 text-xs font-bold ${
+                            supervisor.status === "نشط"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {supervisor.status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {permissionGroups.map((group) => (
+                          <div
+                            key={group.title}
+                            className="rounded-sm bg-gray-50 p-4"
+                          >
+                            <h4 className="mb-3 font-bold text-gray-700">
+                              {group.title}
+                            </h4>
+
+                            <div className="space-y-2">
+                              {group.permissions.map((permission) => {
+                                const isGranted =
+                                  supervisor.permissions.includes(
+                                    permission.key,
+                                  );
+
+                                return (
+                                  <label
+                                    key={permission.key}
+                                    className="flex items-center gap-2 text-sm text-gray-700"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isGranted}
+                                      readOnly
+                                      className="h-4 w-4 accent-[var(--color-islamic-green)]"
+                                    />
+                                    {permission.label}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {activeSection === "settings" && (
+              <section className="p-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="rounded-sm border border-gray-200 p-5">
+                    <div className="mb-3 flex items-center gap-2">
+                      <SlidersHorizontal className="h-5 w-5 text-[var(--color-islamic-gold)]" />
+                      <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                        إعدادات العرض
+                      </h3>
+                    </div>
+                    <p className="text-gray-600">
+                      التحكم في ترتيب الأقسام، وإظهار أو إخفاء بعض الصفحات،
+                      وتعديل العبارات العامة في الموقع.
+                    </p>
+                  </div>
+
+                  <div className="rounded-sm border border-gray-200 p-5">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-[var(--color-islamic-gold)]" />
+                      <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                        بيانات التواصل
+                      </h3>
+                    </div>
+                    <p className="text-gray-600">
+                      إدارة روابط القنوات الرسمية ووسائل التواصل ونماذج الاتصال.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+          </main>
+        </div>
+
+        <div className="mt-8 rounded-sm border border-gray-200 bg-white p-5">
+          <p className="text-sm leading-relaxed text-gray-600">
+            هذه نسخة هيكلية متقدمة للوحة التحكم، مهيأة لاحقًا للربط بقاعدة
+            بيانات وتسجيل دخول. الصلاحيات هنا مبنية على المهام الممنوحة لكل
+            مشرف، وليست أدوارًا ثابتة.
           </p>
         </div>
       </div>
