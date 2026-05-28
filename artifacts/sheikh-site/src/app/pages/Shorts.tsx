@@ -10,239 +10,22 @@ import {
   Tag,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-
-type TrustLevel = "عالٍ" | "متوسط";
-
-type ShortClip = {
-  id: number;
-  title: string;
-  channel: string;
-  duration: string;
-  category: string;
-  videoId: string;
-  url: string;
-  trust: TrustLevel;
-  note?: string;
-  sourceTitle?: string;
-  sourceUrl?: string;
-};
+import { shortClips } from "../data/shortClips";
 
 export function Shorts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("الكل");
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
-  const shorts: ShortClip[] = [
-    {
-      id: 1,
-      title: "تعليم الناس بالتلطف واللين",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "02:42",
-      category: "آداب وأخلاق",
-      videoId: "nDgdrFm6Pg0",
-      url: "https://www.youtube.com/watch?v=nDgdrFm6Pg0",
-      trust: "عالٍ",
-    },
-    {
-      id: 2,
-      title: "أسباب زيادة الإيمان",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "20:29",
-      category: "رقائق وإيمان",
-      videoId: "cq7ZY_yP_Ow",
-      url: "https://www.youtube.com/watch?v=cq7ZY_yP_Ow",
-      trust: "عالٍ",
-    },
-    {
-      id: 3,
-      title: "مفهوم خاطئ عند بعض الناس في كتابة الوصية",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "01:37",
-      category: "فقه وآداب",
-      videoId: "mA9374Uljw8",
-      url: "https://www.youtube.com/watch?v=mA9374Uljw8",
-      trust: "عالٍ",
-    },
-    {
-      id: 4,
-      title: "عدم التعنت والتكبر وقبول الحق ممن جاء به",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "00:47",
-      category: "آداب وأخلاق",
-      videoId: "Wmo931Fe2-w",
-      url: "https://www.youtube.com/watch?v=Wmo931Fe2-w",
-      trust: "عالٍ",
-    },
-    {
-      id: 5,
-      title: "تقارب الزمان",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "04:00",
-      category: "رقائق وإيمان",
-      videoId: "ayT36J8F5EQ",
-      url: "https://www.youtube.com/watch?v=ayT36J8F5EQ",
-      trust: "عالٍ",
-    },
-    {
-      id: 6,
-      title: "من ثمار طلب العلم: خشية الله",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "00:33",
-      category: "آداب العلم",
-      videoId: "-hbpphutj0g",
-      url: "https://www.youtube.com/watch?v=-hbpphutj0g",
-      trust: "عالٍ",
-    },
-    {
-      id: 7,
-      title: "لا تمن على الناس",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "00:43",
-      category: "آداب وأخلاق",
-      videoId: "vXsPrUIinF8",
-      url: "https://www.youtube.com/watch?v=vXsPrUIinF8",
-      trust: "عالٍ",
-    },
-    {
-      id: 8,
-      title: "أثر الصحبة على الفرد",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "18:28",
-      category: "آداب وتربية",
-      videoId: "Cl-QytHDLYw",
-      url: "https://www.youtube.com/watch?v=Cl-QytHDLYw",
-      trust: "عالٍ",
-    },
-    {
-      id: 9,
-      title: "الحفاظ على العبادة وتقوى الله",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "07:58",
-      category: "رقائق وإيمان",
-      videoId: "T8r-6van3bg",
-      url: "https://www.youtube.com/watch?v=T8r-6van3bg",
-      trust: "عالٍ",
-    },
-    {
-      id: 10,
-      title: "خطورة عدم الاستنجاء والنميمة",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "07:22",
-      category: "فقه وآداب",
-      videoId: "3y5QAa1wuF4",
-      url: "https://www.youtube.com/watch?v=3y5QAa1wuF4",
-      trust: "عالٍ",
-    },
-    {
-      id: 11,
-      title: "خطورة الاستهانة بالدماء",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "21:37",
-      category: "حقوق وأمن فكري",
-      videoId: "5HJ60ra1nSQ",
-      url: "https://www.youtube.com/watch?v=5HJ60ra1nSQ",
-      trust: "عالٍ",
-    },
-    {
-      id: 12,
-      title:
-        "تفسير قوله تعالى: يا أيها الذين آمنوا إنما الخمر والميسر والأنصاب والأزلام رجس",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "21:56",
-      category: "تفسير وفوائد",
-      videoId: "sd0t8hT6rg4",
-      url: "https://www.youtube.com/watch?v=sd0t8hT6rg4",
-      trust: "عالٍ",
-    },
-    {
-      id: 13,
-      title: "تفسير قوله تعالى: فمنهم شقي وسعيد",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "02:59",
-      category: "تفسير وفوائد",
-      videoId: "oO8jyYikty4",
-      url: "https://www.youtube.com/watch?v=oO8jyYikty4",
-      trust: "عالٍ",
-    },
-    {
-      id: 14,
-      title: "حسن الخلق",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "01:46",
-      category: "آداب وأخلاق",
-      videoId: "ySwFY7usx58",
-      url: "https://www.youtube.com/watch?v=ySwFY7usx58",
-      trust: "عالٍ",
-    },
-    {
-      id: 15,
-      title: "الاستهانة بالطلاق",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "03:46",
-      category: "فقه الأسرة",
-      videoId: "0dBdUvpaGPY",
-      url: "https://www.youtube.com/watch?v=0dBdUvpaGPY",
-      trust: "عالٍ",
-    },
-    {
-      id: 16,
-      title: "تسوية الصفوف",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "01:34",
-      category: "فقه وآداب",
-      videoId: "biDL-7eXE-Y",
-      url: "https://www.youtube.com/watch?v=biDL-7eXE-Y",
-      trust: "عالٍ",
-    },
-    {
-      id: 17,
-      title: "سنن يوم الجمعة",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "08:51",
-      category: "فقه وآداب",
-      videoId: "95fsI12YfD8",
-      url: "https://www.youtube.com/watch?v=95fsI12YfD8",
-      trust: "عالٍ",
-    },
-    {
-      id: 18,
-      title: "فوائد الشيخ عبدالله آل غلفيص",
-      channel: "إبراهيم بن عبدالله الشرافي",
-      duration: "قائمة تشغيل",
-      category: "فوائد عامة",
-      videoId: "videoseries?list=PL28xdVEzaSCCCPQdWb_O4GxDDexK33R1r",
-      url: "https://www.youtube.com/playlist?list=PL28xdVEzaSCCCPQdWb_O4GxDDexK33R1r",
-      trust: "عالٍ",
-      note: "قائمة تشغيل كبيرة للفوائد والمقاطع المختارة.",
-    },
-    {
-      id: 19,
-      title: "فوائد وعظية",
-      channel: "عبدالله بن سعد آل غلفيص",
-      duration: "قائمة تشغيل",
-      category: "فوائد عامة",
-      videoId: "videoseries?list=PLGMk6zGE-urVHCyOGemmuzaT6qIwSIre_",
-      url: "https://m.youtube.com/playlist?list=PLGMk6zGE-urVHCyOGemmuzaT6qIwSIre_",
-      trust: "عالٍ",
-      note: "قائمة تشغيل للفوائد الوعظية.",
-    },
-  ];
-
-  const categories = [
-    "الكل",
-    "آداب وأخلاق",
-    "رقائق وإيمان",
-    "فقه وآداب",
-    "تفسير وفوائد",
-    "آداب العلم",
-    "آداب وتربية",
-    "فقه الأسرة",
-    "حقوق وأمن فكري",
-    "فوائد عامة",
-  ];
+  const categories = useMemo(() => {
+    return [
+      "الكل",
+      ...Array.from(new Set(shortClips.map((clip) => clip.category))),
+    ];
+  }, []);
 
   const filteredShorts = useMemo(() => {
-    return shorts.filter((short) => {
+    return shortClips.filter((short) => {
       const matchesSearch =
         searchTerm.trim() === "" ||
         short.title.includes(searchTerm) ||
@@ -280,7 +63,7 @@ export function Shorts() {
         </h1>
         <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
         <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          فوائد وفرائد منتخبة من الدروس والمحاضرات، مصنفة بحسب موضوعها، مع تشغيل
+          فوائد وفرائد منتخبة لا تتجاوز ثلاث دقائق، مصنفة بحسب موضوعها، مع تشغيل
           مقطع واحد في كل مرة داخل الصفحة.
         </p>
       </div>

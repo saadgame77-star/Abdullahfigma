@@ -10,6 +10,7 @@ import {
 import { useMemo, useState } from "react";
 
 type TrustLevel = "عالٍ" | "متوسط";
+type CompletionStatus = "مكتملة" | "غير مكتملة";
 
 type ScientificSeries = {
   id: number;
@@ -21,12 +22,14 @@ type ScientificSeries = {
   playlistId: string;
   url: string;
   trust: TrustLevel;
+  status: CompletionStatus;
   note?: string;
 };
 
 export function Lessons() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("الكل");
+  const [activeStatus, setActiveStatus] = useState("الكل");
 
   const scientificSeries: ScientificSeries[] = [
     {
@@ -39,6 +42,7 @@ export function Lessons() {
       playlistId: "PL28xdVEzaSCAH7OP2ObngNoUpJ1Mxl_eq",
       url: "https://www.youtube.com/playlist?list=PL28xdVEzaSCAH7OP2ObngNoUpJ1Mxl_eq",
       trust: "عالٍ",
+      status: "مكتملة",
     },
     {
       id: 2,
@@ -50,6 +54,7 @@ export function Lessons() {
       playlistId: "PL28xdVEzaSCA1wsUQ4uLmPWFZ7k-9cSrU",
       url: "https://m.youtube.com/playlist?list=PL28xdVEzaSCA1wsUQ4uLmPWFZ7k-9cSrU",
       trust: "عالٍ",
+      status: "غير مكتملة",
       note: "ظهرت منها مقاطع في سورة يوسف.",
     },
     {
@@ -62,6 +67,7 @@ export function Lessons() {
       playlistId: "PL_Q00zrSooq8waFXBQdY8NC-ov2bqlLTa",
       url: "https://m.youtube.com/playlist?list=PL_Q00zrSooq8waFXBQdY8NC-ov2bqlLTa",
       trust: "عالٍ",
+      status: "غير مكتملة",
       note: "قد توجد حلقات أخرى منفردة خارج القائمة.",
     },
     {
@@ -74,6 +80,7 @@ export function Lessons() {
       playlistId: "PLWQYsha9_xM7Tja50Ohk1Frso9JDOK8fa",
       url: "https://www.youtube.com/playlist?list=PLWQYsha9_xM7Tja50Ohk1Frso9JDOK8fa",
       trust: "عالٍ",
+      status: "غير مكتملة",
     },
     {
       id: 5,
@@ -85,6 +92,7 @@ export function Lessons() {
       playlistId: "PLGMk6zGE-urWamKf-gWF7nBAxa6EGe4Lx",
       url: "https://www.youtube.com/playlist?list=PLGMk6zGE-urWamKf-gWF7nBAxa6EGe4Lx",
       trust: "عالٍ",
+      status: "غير مكتملة",
     },
     {
       id: 6,
@@ -96,6 +104,7 @@ export function Lessons() {
       playlistId: "PLGMk6zGE-urWquDwXCELU_mdcJEgn2MoK",
       url: "https://www.youtube.com/playlist?list=PLGMk6zGE-urWquDwXCELU_mdcJEgn2MoK",
       trust: "عالٍ",
+      status: "مكتملة",
     },
     {
       id: 7,
@@ -107,10 +116,12 @@ export function Lessons() {
       playlistId: "PLGMk6zGE-urVbxaRdViZaKhRvbNNLKGGa",
       url: "https://www.youtube.com/playlist?list=PLGMk6zGE-urVbxaRdViZaKhRvbNNLKGGa",
       trust: "عالٍ",
+      status: "غير مكتملة",
     },
   ];
 
   const categories = ["الكل", "تفسير", "حديث", "فقه", "آداب العلم"];
+  const statuses = ["الكل", "مكتملة", "غير مكتملة"];
 
   const filteredSeries = useMemo(() => {
     return scientificSeries.filter((series) => {
@@ -123,9 +134,12 @@ export function Lessons() {
       const matchesCategory =
         activeCategory === "الكل" || series.category.includes(activeCategory);
 
-      return matchesSearch && matchesCategory;
+      const matchesStatus =
+        activeStatus === "الكل" || series.status === activeStatus;
+
+      return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [activeCategory, searchTerm]);
+  }, [activeCategory, activeStatus, searchTerm]);
 
   return (
     <div className="container mx-auto px-4 py-12 animate-in fade-in duration-500">
@@ -140,7 +154,6 @@ export function Lessons() {
         </p>
       </div>
 
-      {/* Filters Bar */}
       <div className="bg-white p-4 rounded-sm shadow-sm border border-gray-100 mb-10 flex flex-col gap-4">
         <div className="relative">
           <input
@@ -173,9 +186,29 @@ export function Lessons() {
             </button>
           ))}
         </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 text-sm text-gray-600 ml-2">
+            <CheckCircle2 className="w-4 h-4" />
+            حالة السلسلة:
+          </div>
+
+          {statuses.map((status) => (
+            <button
+              key={status}
+              onClick={() => setActiveStatus(status)}
+              className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
+                activeStatus === status
+                  ? "bg-[var(--color-islamic-green)] text-white"
+                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Scientific Series Section */}
       <section className="mb-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b-2 border-gray-200 pb-4">
           <div>
@@ -187,13 +220,13 @@ export function Lessons() {
             </h2>
           </div>
           <p className="text-sm text-gray-500 max-w-xl leading-relaxed">
-            يتم عرض قوائم التشغيل داخل الصفحة مباشرة، مع رابط خارجي للمصدر على
-            يوتيوب عند الحاجة.
+            يتم عرض قوائم التشغيل داخل الصفحة مباشرة، مع إمكانية استعراض السلاسل
+            المكتملة أو غير المكتملة وتصفيتها حسب الباب العلمي.
           </p>
         </div>
 
         {filteredSeries.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filteredSeries.map((series) => (
               <article
                 key={series.id}
@@ -210,36 +243,47 @@ export function Lessons() {
                   />
                 </div>
 
-                <div className="p-6">
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-[var(--color-islamic-green)] text-white font-medium">
-                      <Library className="w-3.5 h-3.5" />
+                <div className="p-4">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-sm bg-[var(--color-islamic-green)] text-white font-medium">
+                      <Library className="w-3 h-3" />
                       {series.section}
                     </span>
 
-                    <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-gray-100 text-gray-700 font-medium">
-                      <ListVideo className="w-3.5 h-3.5" />
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-sm bg-gray-100 text-gray-700 font-medium">
+                      <ListVideo className="w-3 h-3" />
                       {series.count}
                     </span>
 
+                    <span
+                      className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-sm font-bold ${
+                        series.status === "مكتملة"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3 h-3" />
+                      {series.status}
+                    </span>
+
                     {series.trust === "متوسط" ? (
-                      <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-amber-100 text-amber-800 font-bold">
-                        <AlertTriangle className="w-3.5 h-3.5" />
+                      <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-sm bg-amber-100 text-amber-800 font-bold">
+                        <AlertTriangle className="w-3 h-3" />
                         بحاجة تحقق
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-sm bg-green-100 text-green-800 font-bold">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-sm bg-green-100 text-green-800 font-bold">
+                        <CheckCircle2 className="w-3 h-3" />
                         موثوق
                       </span>
                     )}
                   </div>
 
-                  <h3 className="font-serif text-2xl font-bold text-gray-800 leading-relaxed mb-4 group-hover:text-[var(--color-islamic-green)] transition-colors">
+                  <h3 className="font-serif text-xl font-bold text-gray-800 leading-relaxed mb-3 group-hover:text-[var(--color-islamic-green)] transition-colors">
                     {series.title}
                   </h3>
 
-                  <div className="space-y-2 text-sm text-gray-600 mb-5">
+                  <div className="space-y-1.5 text-sm text-gray-600 mb-4">
                     <p>
                       <span className="font-bold text-gray-700">القناة: </span>
                       {series.channel}
@@ -261,7 +305,7 @@ export function Lessons() {
                     href={series.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-white border border-[var(--color-islamic-green)] text-[var(--color-islamic-green)] px-5 py-2 rounded-sm hover:bg-[var(--color-islamic-green)] hover:text-white transition-colors font-medium"
+                    className="inline-flex w-full items-center justify-center gap-2 bg-white border border-[var(--color-islamic-green)] text-[var(--color-islamic-green)] px-4 py-2 rounded-sm hover:bg-[var(--color-islamic-green)] hover:text-white transition-colors font-medium text-sm"
                   >
                     فتح القائمة في يوتيوب
                     <ExternalLink className="w-4 h-4" />
@@ -277,7 +321,6 @@ export function Lessons() {
         )}
       </section>
 
-      {/* Individual Lessons Placeholder */}
       <section className="bg-white border border-gray-200 rounded-sm p-8 shadow-sm">
         <div className="text-center max-w-3xl mx-auto">
           <span className="inline-flex items-center gap-2 text-[var(--color-islamic-gold)] font-serif text-xl mb-3">
