@@ -9,7 +9,6 @@ import { Words } from "./pages/Words";
 import { Shorts } from "./pages/Shorts";
 import { Recitations } from "./pages/Recitations";
 import { Contact } from "./pages/Contact";
-import { Admin } from "./pages/Admin";
 
 export const router = createBrowserRouter(
   [
@@ -26,7 +25,6 @@ export const router = createBrowserRouter(
         { path: "shorts", Component: Shorts },
         { path: "recitations", Component: Recitations },
         { path: "contact", Component: Contact },
-        { path: "admin", Component: Admin },
         {
           path: "*",
           Component: () => (
@@ -35,7 +33,7 @@ export const router = createBrowserRouter(
                 404
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                عذراً، الصفحة التي تبحث عنها غير موجودة.
+                عذرًا، الصفحة التي تبحث عنها غير موجودة.
               </p>
               <a
                 href="/"
