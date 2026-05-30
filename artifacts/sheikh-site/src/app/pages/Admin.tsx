@@ -24,34 +24,13 @@ import {
   Video,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { adminSections, type AdminSection } from "../data/adminSections";
+import { adminSupervisors } from "../data/adminSupervisors";
+import { adminTags } from "../data/adminTags";
+import { knowledgeCategories } from "../data/knowledgeCategories";
+import { permissionGroups } from "../data/adminPermissions";
 import { scientificSeries } from "../data/scientificSeries";
 import { shortClips } from "../data/shortClips";
-
-type AdminSection =
-  | "overview"
-  | "series"
-  | "shorts"
-  | "lectures"
-  | "words"
-  | "schedule"
-  | "knowledge"
-  | "tags"
-  | "supervisors"
-  | "settings";
-
-type PermissionKey =
-  | "manageSeries"
-  | "manageShorts"
-  | "manageLectures"
-  | "manageWords"
-  | "manageSchedule"
-  | "manageKnowledge"
-  | "manageTags"
-  | "publishContent"
-  | "hideContent"
-  | "deleteContent"
-  | "manageSupervisors"
-  | "editSettings";
 
 type ContentStatus =
   | "منشور"
@@ -76,197 +55,18 @@ type ContentItem = {
   tags: string[];
 };
 
-type KnowledgeCategory = {
-  id: string;
-  name: string;
-  children: string[];
+const sectionIcons = {
+  overview: LayoutDashboard,
+  series: ListVideo,
+  shorts: Video,
+  lectures: Mic2,
+  words: Megaphone,
+  schedule: CalendarDays,
+  knowledge: FolderTree,
+  tags: Tags,
+  supervisors: UserCog,
+  settings: Settings,
 };
-
-type Supervisor = {
-  id: number;
-  name: string;
-  email: string;
-  permissions: PermissionKey[];
-  status: "نشط" | "موقوف";
-};
-
-const adminSections = [
-  {
-    key: "overview" as const,
-    title: "نظرة عامة",
-    description: "ملخص سريع عن محتوى الموقع وحالته.",
-    icon: LayoutDashboard,
-  },
-  {
-    key: "series" as const,
-    title: "السلاسل العلمية",
-    description: "إدارة السلاسل العلمية المكتملة وقيد الاكتمال.",
-    icon: ListVideo,
-  },
-  {
-    key: "shorts" as const,
-    title: "المقاطع القصيرة",
-    description: "فوائد مختصرة لا تتجاوز ثلاث دقائق.",
-    icon: Video,
-  },
-  {
-    key: "lectures" as const,
-    title: "المحاضرات",
-    description: "المحاضرات العامة واللقاءات العلمية.",
-    icon: Mic2,
-  },
-  {
-    key: "words" as const,
-    title: "الكلمات الدعوية",
-    description: "الكلمات والمواعظ والتوجيهات العامة.",
-    icon: Megaphone,
-  },
-  {
-    key: "schedule" as const,
-    title: "الجدول",
-    description: "مواعيد الدروس والمحاضرات والبرامج.",
-    icon: CalendarDays,
-  },
-  {
-    key: "knowledge" as const,
-    title: "أبواب العلم",
-    description: "تصنيفات علمية منهجية قابلة للتعديل.",
-    icon: FolderTree,
-  },
-  {
-    key: "tags" as const,
-    title: "الوسوم",
-    description: "وسوم تساعد البحث والربط بين المواد.",
-    icon: Tags,
-  },
-  {
-    key: "supervisors" as const,
-    title: "المشرفون والصلاحيات",
-    description: "منح كل مشرف مهام وصلاحيات مخصصة.",
-    icon: UserCog,
-  },
-  {
-    key: "settings" as const,
-    title: "الإعدادات",
-    description: "إعدادات الموقع العامة.",
-    icon: Settings,
-  },
-];
-
-const permissionGroups: Array<{
-  title: string;
-  permissions: Array<{ key: PermissionKey; label: string }>;
-}> = [
-  {
-    title: "إدارة المحتوى",
-    permissions: [
-      { key: "manageSeries", label: "إدارة السلاسل العلمية" },
-      { key: "manageShorts", label: "إدارة المقاطع القصيرة" },
-      { key: "manageLectures", label: "إدارة المحاضرات" },
-      { key: "manageWords", label: "إدارة الكلمات الدعوية" },
-      { key: "manageSchedule", label: "إدارة الجدول" },
-    ],
-  },
-  {
-    title: "التصنيف والبحث",
-    permissions: [
-      { key: "manageKnowledge", label: "إدارة أبواب العلم" },
-      { key: "manageTags", label: "إدارة الوسوم" },
-    ],
-  },
-  {
-    title: "النشر والتحكم",
-    permissions: [
-      { key: "publishContent", label: "نشر المحتوى" },
-      { key: "hideContent", label: "إخفاء المحتوى" },
-      { key: "deleteContent", label: "حذف المحتوى" },
-    ],
-  },
-  {
-    title: "الإدارة العليا",
-    permissions: [
-      { key: "manageSupervisors", label: "إدارة المشرفين" },
-      { key: "editSettings", label: "تعديل إعدادات الموقع" },
-    ],
-  },
-];
-
-const knowledgeCategories: KnowledgeCategory[] = [
-  {
-    id: "tafsir",
-    name: "التفسير وعلوم القرآن",
-    children: ["تفسير القرآن", "شروح كتب التفسير", "فوائد تفسيرية"],
-  },
-  {
-    id: "hadith",
-    name: "الحديث وعلومه",
-    children: ["شروح كتب الحديث", "أحاديث الأحكام", "مصطلح الحديث"],
-  },
-  {
-    id: "fiqh",
-    name: "الفقه",
-    children: ["العبادات", "المعاملات", "الأسرة", "القضاء"],
-  },
-  {
-    id: "aqidah",
-    name: "العقيدة",
-    children: ["التوحيد", "الإيمان", "الردود العلمية"],
-  },
-  {
-    id: "adab",
-    name: "آداب العلم والتربية",
-    children: ["طلب العلم", "آداب المتعلم", "الوصايا"],
-  },
-  {
-    id: "raqaiq",
-    name: "الرقائق والآداب",
-    children: ["المواعظ", "حسن الخلق", "تزكية النفس"],
-  },
-];
-
-const tags = [
-  "تفسير",
-  "البغوي",
-  "عمدة الأحكام",
-  "طلب العلم",
-  "القضاء",
-  "حسن الخلق",
-  "الوصية",
-  "الجمعة",
-  "الطلاق",
-  "الإيمان",
-  "آداب العلم",
-];
-
-const supervisors: Supervisor[] = [
-  {
-    id: 1,
-    name: "المشرف العام",
-    email: "admin@example.com",
-    status: "نشط",
-    permissions: [
-      "manageSeries",
-      "manageShorts",
-      "manageLectures",
-      "manageWords",
-      "manageSchedule",
-      "manageKnowledge",
-      "manageTags",
-      "publishContent",
-      "hideContent",
-      "deleteContent",
-      "manageSupervisors",
-      "editSettings",
-    ],
-  },
-  {
-    id: 2,
-    name: "مدخل المحتوى",
-    email: "content@example.com",
-    status: "نشط",
-    permissions: ["manageSeries", "manageShorts", "manageTags"],
-  },
-];
 
 function statusClass(status: string) {
   if (
@@ -280,15 +80,6 @@ function statusClass(status: string) {
   }
 
   return "bg-green-100 text-green-800";
-}
-
-function getPermissionLabel(permission: PermissionKey) {
-  for (const group of permissionGroups) {
-    const found = group.permissions.find((item) => item.key === permission);
-    if (found) return found.label;
-  }
-
-  return permission;
 }
 
 export function Admin() {
@@ -397,8 +188,8 @@ export function Admin() {
   function sectionCount(section: AdminSection) {
     if (section === "overview") return contentItems.length;
     if (section === "knowledge") return knowledgeCategories.length;
-    if (section === "tags") return tags.length;
-    if (section === "supervisors") return supervisors.length;
+    if (section === "tags") return adminTags.length;
+    if (section === "supervisors") return adminSupervisors.length;
     if (section === "settings") return 0;
 
     return contentItems.filter((item) => item.section === section).length;
@@ -465,7 +256,7 @@ export function Admin() {
 
             <div className="space-y-1">
               {adminSections.map((section) => {
-                const Icon = section.icon;
+                const Icon = sectionIcons[section.key];
                 const isActive = activeSection === section.key;
 
                 return (
@@ -758,7 +549,7 @@ export function Admin() {
             {activeSection === "tags" && (
               <section className="p-5">
                 <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
+                  {adminTags.map((tag) => (
                     <span
                       key={tag}
                       className="inline-flex items-center gap-2 rounded-sm border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
@@ -777,7 +568,7 @@ export function Admin() {
             {activeSection === "supervisors" && (
               <section className="p-5">
                 <div className="space-y-5">
-                  {supervisors.map((supervisor) => (
+                  {adminSupervisors.map((supervisor) => (
                     <article
                       key={supervisor.id}
                       className="rounded-sm border border-gray-200 p-5"
