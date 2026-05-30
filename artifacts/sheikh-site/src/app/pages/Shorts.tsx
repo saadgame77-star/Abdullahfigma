@@ -1,43 +1,77 @@
 import {
   AlertTriangle,
+  BookOpen,
   CheckCircle2,
   Clock,
   ExternalLink,
   Filter,
+  Library,
   Play,
   Search,
   Share2,
   Tag,
+  Tags,
+  Video,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { getAllKnowledgeAreaNames } from "../data/knowledgeCategories";
 import { shortClips } from "../data/shortClips";
+
+const SHORTS_MAX_DURATION_SECONDS = 180;
 
 export function Shorts() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeKnowledgeArea, setActiveKnowledgeArea] = useState("الكل");
   const [activeCategory, setActiveCategory] = useState("الكل");
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+
+  const visibleShorts = useMemo(() => {
+    return shortClips.filter((clip) => {
+      return (
+        clip.publishStatus === "منشور" &&
+        clip.durationSeconds <= SHORTS_MAX_DURATION_SECONDS
+      );
+    });
+  }, []);
+
+  const knowledgeAreas = useMemo(() => {
+    return ["الكل", ...getAllKnowledgeAreaNames()];
+  }, []);
 
   const categories = useMemo(() => {
     return [
       "الكل",
-      ...Array.from(new Set(shortClips.map((clip) => clip.category))),
+      ...Array.from(new Set(visibleShorts.map((clip) => clip.category))),
     ];
-  }, []);
+  }, [visibleShorts]);
 
   const filteredShorts = useMemo(() => {
-    return shortClips.filter((short) => {
+    return visibleShorts.filter((clip) => {
+      const search = searchTerm.trim();
+
       const matchesSearch =
-        searchTerm.trim() === "" ||
-        short.title.includes(searchTerm) ||
-        short.channel.includes(searchTerm) ||
-        short.category.includes(searchTerm);
+        search === "" ||
+        clip.title.includes(search) ||
+        clip.channel.includes(search) ||
+        clip.category.includes(search) ||
+        clip.knowledgeArea.includes(search) ||
+        clip.subCategory.includes(search) ||
+        clip.tags.some((tag) => tag.includes(search));
+
+      const matchesKnowledgeArea =
+        activeKnowledgeArea === "الكل" ||
+        clip.knowledgeArea === activeKnowledgeArea;
 
       const matchesCategory =
-        activeCategory === "الكل" || short.category === activeCategory;
+        activeCategory === "الكل" || clip.category === activeCategory;
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesKnowledgeArea && matchesCategory;
     });
-  }, [activeCategory, searchTerm]);
+  }, [activeCategory, activeKnowledgeArea, searchTerm, visibleShorts]);
+
+  const representedKnowledgeAreaCount = useMemo(() => {
+    return new Set(visibleShorts.map((clip) => clip.knowledgeArea)).size;
+  }, [visibleShorts]);
 
   function getEmbedUrl(videoId: string) {
     if (videoId.startsWith("videoseries?list=")) {
@@ -63,16 +97,48 @@ export function Shorts() {
         </h1>
         <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
         <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          فوائد وفرائد منتخبة لا تتجاوز ثلاث دقائق، مصنفة بحسب موضوعها، مع تشغيل
-          مقطع واحد في كل مرة داخل الصفحة.
+          فوائد مختصرة لا تتجاوز ثلاث دقائق، مصنفة حسب أبواب العلم والموضوعات،
+          مع وسوم تساعد لاحقًا في البحث والوصول السريع.
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+        <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <Video className="w-6 h-6 text-[var(--color-islamic-gold)]" />
+            <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+              {visibleShorts.length}
+            </span>
+          </div>
+          <p className="text-sm text-gray-600">إجمالي المقاطع القصيرة</p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <Clock className="w-6 h-6 text-[var(--color-islamic-gold)]" />
+            <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+              3
+            </span>
+          </div>
+          <p className="text-sm text-gray-600">الحد الأعلى بالدقائق</p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <Library className="w-6 h-6 text-[var(--color-islamic-gold)]" />
+            <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+              {representedKnowledgeAreaCount}
+            </span>
+          </div>
+          <p className="text-sm text-gray-600">أبواب علم ممثلة</p>
+        </div>
       </div>
 
       <div className="bg-white p-4 rounded-sm shadow-sm border border-gray-100 mb-10 flex flex-col gap-4">
         <div className="relative">
           <input
             type="text"
-            placeholder="البحث في المقاطع القصيرة..."
+            placeholder="البحث في المقاطع القصيرة والوسوم..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="w-full bg-gray-50 border border-gray-200 rounded-sm py-3 px-4 pr-12 focus:outline-none focus:border-[var(--color-islamic-gold)] focus:ring-1 focus:ring-[var(--color-islamic-gold)] transition-all"
@@ -83,7 +149,31 @@ export function Shorts() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 text-sm text-gray-600 ml-2">
             <Filter className="w-4 h-4" />
-            تصفية حسب الموضوع:
+            باب العلم:
+          </div>
+
+          {knowledgeAreas.map((area) => (
+            <button
+              key={area}
+              onClick={() => {
+                setActiveKnowledgeArea(area);
+                setActiveVideoId(null);
+              }}
+              className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
+                activeKnowledgeArea === area
+                  ? "bg-[var(--color-islamic-green)] text-white"
+                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {area}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 text-sm text-gray-600 ml-2">
+            <Tag className="w-4 h-4" />
+            التصنيف:
           </div>
 
           {categories.map((category) => (
@@ -155,6 +245,11 @@ export function Shorts() {
                     <>
                       <div className="pointer-events-none absolute top-4 right-4 z-10 flex flex-col gap-2 items-start">
                         <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-sm bg-[var(--color-islamic-green)] text-white font-medium">
+                          <BookOpen className="w-3.5 h-3.5" />
+                          {short.knowledgeArea}
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-sm bg-black/70 text-white font-medium">
                           <Tag className="w-3.5 h-3.5" />
                           {short.category}
                         </span>
@@ -200,10 +295,26 @@ export function Shorts() {
                 </div>
 
                 <div className="bg-white p-4 space-y-3">
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-gray-800 leading-relaxed mb-2">
+                      {short.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {short.description}
+                    </p>
+                  </div>
+
                   <div className="space-y-2 text-sm text-gray-600">
                     <p>
                       <span className="font-bold text-gray-700">القناة: </span>
                       {short.channel}
+                    </p>
+
+                    <p>
+                      <span className="font-bold text-gray-700">
+                        التصنيف الفرعي:{" "}
+                      </span>
+                      {short.subCategory}
                     </p>
 
                     <div className="flex flex-wrap gap-2">
@@ -217,6 +328,18 @@ export function Shorts() {
                         {short.category}
                       </span>
                     </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {short.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 rounded-sm bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-200"
+                      >
+                        <Tags className="w-3 h-3 text-[var(--color-islamic-gold)]" />
+                        {tag}
+                      </span>
+                    ))}
                   </div>
 
                   {short.note && (

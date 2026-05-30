@@ -11,6 +11,7 @@ import {
   Tags,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { getAllKnowledgeAreaNames } from "../data/knowledgeCategories";
 import { scientificSeries } from "../data/scientificSeries";
 
 export function Lessons() {
@@ -25,13 +26,8 @@ export function Lessons() {
   }, []);
 
   const knowledgeAreas = useMemo(() => {
-    return [
-      "الكل",
-      ...Array.from(
-        new Set(visibleSeries.map((series) => series.knowledgeArea)),
-      ),
-    ];
-  }, [visibleSeries]);
+    return ["الكل", ...getAllKnowledgeAreaNames()];
+  }, []);
 
   const statuses = ["الكل", "مكتملة", "قيد الاكتمال"];
 
