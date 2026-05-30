@@ -7,10 +7,12 @@ import {
   Clock,
   ExternalLink,
   Library,
+  MapPin,
   MessageCircle,
   Mic2,
   Play,
   PlaySquare,
+  Repeat,
   Tags,
   Video,
 } from "lucide-react";
@@ -55,6 +57,7 @@ export function Home() {
   const latestSeries = publishedSeries.slice(0, 3);
   const latestShorts = publishedShorts.slice(0, 3);
   const nextScheduleItems = publishedScheduleItems.slice(0, 3);
+  const upcomingActivity = publishedScheduleItems[0];
 
   const platformSections = [
     {
@@ -93,6 +96,13 @@ export function Home() {
 
   function getShortEmbedUrl(videoId: string) {
     return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+  }
+
+  function getScheduleStatusClass(status: string) {
+    if (status === "قائم") return "bg-green-100 text-green-800";
+    if (status === "مؤجل") return "bg-amber-100 text-amber-800";
+    if (status === "متوقف") return "bg-gray-100 text-gray-700";
+    return "bg-red-100 text-red-700";
   }
 
   return (
@@ -135,6 +145,100 @@ export function Home() {
                 <Clock className="w-5 h-5" />
                 جدول المحاضرات والدروس
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white border-b border-gray-100 py-8">
+        <div className="container mx-auto px-4">
+          <div className="rounded-sm border border-gray-200 bg-[var(--color-islamic-ivory)] shadow-sm overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_auto]">
+              <div className="bg-[var(--color-islamic-green-dark)] text-white p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-sm bg-[var(--color-islamic-gold)] text-[var(--color-islamic-green-dark)] flex items-center justify-center">
+                  <CalendarDays className="w-6 h-6" />
+                </div>
+
+                <div>
+                  <p className="text-sm text-[var(--color-islamic-gold)] font-bold mb-1">
+                    نافذة المتابعة
+                  </p>
+                  <h2 className="font-serif text-2xl font-bold">
+                    النشاط القادم
+                  </h2>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {upcomingActivity ? (
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <span className="inline-flex items-center rounded-sm bg-white border border-gray-200 px-3 py-1 text-xs font-bold text-[var(--color-islamic-green)]">
+                        {upcomingActivity.scheduleKind}
+                      </span>
+
+                      <span
+                        className={`inline-flex items-center rounded-sm px-3 py-1 text-xs font-bold ${getScheduleStatusClass(
+                          upcomingActivity.status,
+                        )}`}
+                      >
+                        {upcomingActivity.status}
+                      </span>
+
+                      <span className="inline-flex items-center gap-1 rounded-sm bg-white border border-gray-200 px-3 py-1 text-xs text-gray-600">
+                        <Repeat className="w-3.5 h-3.5 text-[var(--color-islamic-gold)]" />
+                        {upcomingActivity.recurrenceType}
+                      </span>
+                    </div>
+
+                    <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)] mb-2">
+                      {upcomingActivity.title}
+                    </h3>
+
+                    <p className="text-sm text-gray-600 leading-relaxed mb-4 max-w-3xl">
+                      {upcomingActivity.description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="w-4 h-4 text-[var(--color-islamic-gold)]" />
+                        {upcomingActivity.day || "اليوم يحدد لاحقًا"}
+                      </span>
+
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="w-4 h-4 text-[var(--color-islamic-gold)]" />
+                        {upcomingActivity.time || "الوقت يحدد لاحقًا"}
+                      </span>
+
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="w-4 h-4 text-[var(--color-islamic-gold)]" />
+                        {upcomingActivity.location || "المكان يحدد لاحقًا"}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)] mb-2">
+                      لا يوجد نشاط قادم منشور حاليًا
+                    </h3>
+
+                    <p className="text-gray-600 leading-relaxed max-w-3xl">
+                      عند إضافة موعد منشور في جدول المحاضرات والدروس سيظهر هنا
+                      تلقائيًا أقرب درس أو محاضرة أو كلمة قادمة.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 flex items-center bg-white border-t lg:border-t-0 lg:border-r border-gray-200">
+                <Link
+                  to="/schedule"
+                  className="inline-flex items-center justify-center gap-2 bg-[var(--color-islamic-green)] text-white px-5 py-3 rounded-sm font-bold hover:bg-[var(--color-islamic-green-dark)] transition-colors whitespace-nowrap"
+                >
+                  عرض الجدول
+                  <ChevronLeft className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -415,83 +519,40 @@ export function Home() {
 
       <section className="bg-white py-16 border-t border-gray-100">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-[var(--color-islamic-ivory)] border border-gray-200 rounded-sm p-8">
-              <div className="flex items-center gap-3 mb-5">
-                <CalendarDays className="w-7 h-7 text-[var(--color-islamic-gold)]" />
-                <h2 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-                  جدول المحاضرات والدروس
-                </h2>
-              </div>
+          <div className="bg-[var(--color-islamic-green)] text-white rounded-sm p-8 relative overflow-hidden">
+            <div
+              className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 2px 2px, rgba(255,255,255,0.25) 1px, transparent 0)",
+                backgroundSize: "24px 24px",
+              }}
+            ></div>
 
-              {nextScheduleItems.length > 0 ? (
-                <div className="space-y-4">
-                  {nextScheduleItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-white border border-gray-200 rounded-sm p-4"
-                    >
-                      <h3 className="font-bold text-gray-800 mb-1">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {item.day || "يحدد لاحقًا"} —{" "}
-                        {item.time || "يحدد لاحقًا"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-600 leading-relaxed">
-                  لا توجد مواعيد منشورة حاليًا. سيتم تحديث الجدول عند اعتماد
-                  المواعيد الرسمية.
-                </p>
-              )}
+            <div className="relative z-10 max-w-4xl mx-auto text-center">
+              <h2 className="font-serif text-2xl font-bold mb-4">
+                تصنيف علمي منهجي
+              </h2>
 
-              <Link
-                to="/schedule"
-                className="inline-flex items-center gap-2 mt-6 text-[var(--color-islamic-green)] font-bold hover:text-[var(--color-islamic-gold)] transition-colors"
-              >
-                عرض الجدول
-                <ChevronLeft className="w-5 h-5" />
-              </Link>
-            </div>
+              <p className="text-gray-100 leading-relaxed mb-6">
+                صُممت المنصة لتجميع المحتوى وفق أبواب العلم والوسوم، بحيث يسهل
+                الوصول لاحقًا إلى السلاسل، والفوائد، والمحاضرات، والكلمات حسب
+                الموضوع والتصنيف.
+              </p>
 
-            <div className="bg-[var(--color-islamic-green)] text-white rounded-sm p-8 relative overflow-hidden">
-              <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 2px 2px, rgba(255,255,255,0.25) 1px, transparent 0)",
-                  backgroundSize: "24px 24px",
-                }}
-              ></div>
-
-              <div className="relative z-10">
-                <h2 className="font-serif text-2xl font-bold mb-4">
-                  تصنيف علمي منهجي
-                </h2>
-
-                <p className="text-gray-100 leading-relaxed mb-6">
-                  صُممت المنصة لتجميع المحتوى وفق أبواب العلم والوسوم، بحيث يسهل
-                  الوصول لاحقًا إلى السلاسل، والفوائد، والمحاضرات، والكلمات حسب
-                  الموضوع والتصنيف.
-                </p>
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
-                    أبواب العلم
-                  </span>
-                  <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
-                    وسوم البحث
-                  </span>
-                  <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
-                    حالة النشر
-                  </span>
-                  <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
-                    مصادر موثقة
-                  </span>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
+                  أبواب العلم
+                </span>
+                <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
+                  وسوم البحث
+                </span>
+                <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
+                  حالة النشر
+                </span>
+                <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
+                  مصادر موثقة
+                </span>
               </div>
             </div>
           </div>
