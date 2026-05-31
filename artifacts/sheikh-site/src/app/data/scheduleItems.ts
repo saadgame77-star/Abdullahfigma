@@ -32,6 +32,29 @@ export type ScheduleItem = {
 export const scheduleItems: ScheduleItem[] = [
   {
     id: 1,
+    title: "التعليق على تفسير البغوي",
+    scheduleKind: "درس",
+    knowledgeArea: "التفسير وعلوم القرآن",
+    subCategory: "شروح كتب التفسير",
+    day: "الأحد",
+    time: "بعد صلاة المغرب",
+    dateHijri: "",
+    dateGregorian: "",
+    location: "يحدد لاحقًا",
+    onlineUrl: "",
+    isRecurring: true,
+    recurrenceType: "أسبوعي",
+    recurrenceDetails: "يتكرر أسبوعيًا ما لم يعلن عن توقفه أو تأجيله.",
+    status: "قائم",
+    publishStatus: "منشور",
+    tags: ["درس", "تفسير", "البغوي", "جدول", "درس أسبوعي"],
+    displayOrder: 1,
+    description:
+      "درس علمي أسبوعي في التعليق على تفسير البغوي، ويظهر في نافذة النشاط القادم وفي جدول المحاضرات والدروس.",
+    note: "موعد منشور مؤقت للتجربة، ويمكن تعديله أو تحويله إلى مسودة بعد اعتماد الجدول النهائي.",
+  },
+  {
+    id: 2,
     title: "درس أسبوعي تجريبي",
     scheduleKind: "درس",
     knowledgeArea: "العقيدة",
@@ -48,7 +71,7 @@ export const scheduleItems: ScheduleItem[] = [
     status: "قائم",
     publishStatus: "مسودة",
     tags: ["درس", "جدول", "العقيدة", "التوحيد"],
-    displayOrder: 1,
+    displayOrder: 2,
     description:
       "موعد تجريبي لدرس أسبوعي، لا يظهر في الصفحة العامة لأنه محفوظ كمسودة إلى حين اعتماد بيانات الجدول النهائية.",
     note: "بيانات تجريبية إلى حين إضافة الجدول الرسمي.",
