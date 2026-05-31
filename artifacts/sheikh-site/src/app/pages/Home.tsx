@@ -5,18 +5,14 @@ import {
   CheckCircle2,
   ChevronLeft,
   Clock,
-  ExternalLink,
   Library,
   MapPin,
   MessageCircle,
   Mic2,
   Play,
-  PlaySquare,
   Repeat,
-  Tags,
   Video,
 } from "lucide-react";
-import { useState } from "react";
 import { scientificSeries } from "../data/scientificSeries";
 import { shortClips } from "../data/shortClips";
 import { lectures } from "../data/lectures";
@@ -24,10 +20,6 @@ import { words } from "../data/words";
 import { scheduleItems } from "../data/scheduleItems";
 
 export function Home() {
-  const [activeShortVideoId, setActiveShortVideoId] = useState<string | null>(
-    null,
-  );
-
   const publishedSeries = scientificSeries.filter(
     (series) => series.publishStatus === "منشور",
   );
@@ -56,7 +48,6 @@ export function Home() {
 
   const latestSeries = publishedSeries.slice(0, 3);
   const latestShorts = publishedShorts.slice(0, 3);
-  const nextScheduleItems = publishedScheduleItems.slice(0, 3);
   const upcomingActivity = publishedScheduleItems[0];
 
   const platformSections = [
@@ -88,14 +79,17 @@ export function Home() {
       path: "/shorts",
       count: publishedShorts.length,
     },
+    {
+      title: "متفرقات",
+      desc: "تلاوات وخطب وكتب إلكترونية ومواد أخرى",
+      icon: <Library className="w-8 h-8" />,
+      path: "/recitations",
+      count: 0,
+    },
   ];
 
   function getShortThumbnail(videoId: string) {
     return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-  }
-
-  function getShortEmbedUrl(videoId: string) {
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
   }
 
   function getScheduleStatusClass(status: string) {
@@ -134,7 +128,7 @@ export function Home() {
 
             <p className="text-lg md:text-xl text-gray-200 leading-relaxed max-w-3xl mx-auto mb-12 font-light">
               منصة علمية تجمع السلاسل العلمية، والمحاضرات، والكلمات الدعوية،
-              والمقاطع القصيرة، وفق تصنيف منهجي لأبواب العلم.
+              والمقاطع القصيرة، والمواد المتفرقة، وفق تصنيف منهجي لأبواب العلم.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -395,84 +389,49 @@ export function Home() {
 
           {latestShorts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {latestShorts.map((clip) => {
-                const isActive = activeShortVideoId === clip.videoId;
+              {latestShorts.map((clip) => (
+                <Link
+                  key={clip.id}
+                  to="/shorts"
+                  className="group bg-[var(--color-islamic-ivory)] border border-gray-200 rounded-sm overflow-hidden hover:border-[var(--color-islamic-gold)] hover:shadow-lg transition-all"
+                >
+                  <div className="aspect-video bg-gray-900 relative">
+                    <img
+                      src={getShortThumbnail(clip.videoId)}
+                      alt={clip.title}
+                      className="absolute inset-0 w-full h-full object-cover opacity-80"
+                      loading="lazy"
+                    />
 
-                return (
-                  <article
-                    key={clip.id}
-                    className="bg-[var(--color-islamic-ivory)] border border-gray-200 rounded-sm overflow-hidden hover:border-[var(--color-islamic-gold)] hover:shadow-lg transition-all"
-                  >
-                    <div className="aspect-video bg-gray-900 relative">
-                      {isActive ? (
-                        <iframe
-                          className="w-full h-full"
-                          src={getShortEmbedUrl(clip.videoId)}
-                          title={clip.title}
-                          loading="lazy"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setActiveShortVideoId(clip.videoId)}
-                          className="absolute inset-0 w-full h-full flex items-center justify-center group"
-                        >
-                          <img
-                            src={getShortThumbnail(clip.videoId)}
-                            alt={clip.title}
-                            className="absolute inset-0 w-full h-full object-cover opacity-80"
-                            loading="lazy"
-                          />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span className="w-16 h-16 rounded-full bg-black/50 border border-white/20 flex items-center justify-center group-hover:bg-[var(--color-islamic-gold)] transition-colors">
+                        <Play className="w-8 h-8 text-white group-hover:text-[var(--color-islamic-green-dark)] fill-current" />
+                      </span>
+                    </span>
 
-                          <span className="relative z-10 w-16 h-16 rounded-full bg-black/50 border border-white/20 flex items-center justify-center group-hover:bg-[var(--color-islamic-gold)] transition-colors">
-                            <Play className="w-8 h-8 text-white group-hover:text-[var(--color-islamic-green-dark)] fill-current" />
-                          </span>
+                    <span className="absolute top-3 right-3 z-10 rounded-sm bg-[var(--color-islamic-green)] px-2.5 py-1 text-xs font-bold text-white">
+                      {clip.duration}
+                    </span>
+                  </div>
 
-                          <span className="absolute top-3 right-3 z-10 rounded-sm bg-[var(--color-islamic-green)] px-2.5 py-1 text-xs font-bold text-white">
-                            {clip.duration}
-                          </span>
-                        </button>
-                      )}
-                    </div>
+                  <div className="p-5">
+                    <h3 className="font-serif text-lg font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-[var(--color-islamic-green)] transition-colors">
+                      {clip.title}
+                    </h3>
 
-                    <div className="p-5">
-                      <h3 className="font-serif text-lg font-bold text-gray-800 mb-2 line-clamp-2">
-                        {clip.title}
-                      </h3>
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                      {clip.description}
+                    </p>
 
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                        {clip.description}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-4">
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-[var(--color-islamic-gold)]" />
-                          {clip.duration}
-                        </span>
-
-                        <span className="inline-flex items-center gap-1">
-                          <Tags className="w-3.5 h-3.5 text-[var(--color-islamic-gold)]" />
-                          {clip.category}
-                        </span>
-                      </div>
-
-                      <a
-                        href={clip.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[var(--color-islamic-green)] px-3 py-2 text-sm font-medium text-[var(--color-islamic-green)] transition-colors hover:bg-[var(--color-islamic-green)] hover:text-white"
-                      >
-                        فتح في يوتيوب
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </div>
-                  </article>
-                );
-              })}
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-[var(--color-islamic-green)]">
+                      مشاهدة داخل الموقع
+                      <ChevronLeft className="w-4 h-4" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
           ) : (
             <div className="bg-[var(--color-islamic-ivory)] border border-gray-200 rounded-sm p-8 text-center text-gray-500">
@@ -490,12 +449,12 @@ export function Home() {
           <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {platformSections.map((item) => (
             <Link
               key={item.title}
               to={item.path}
-              className="group block bg-white border border-gray-200 p-8 rounded-sm hover:border-[var(--color-islamic-gold)] hover:shadow-lg transition-all text-center"
+              className="group block bg-white border border-gray-200 p-7 rounded-sm hover:border-[var(--color-islamic-gold)] hover:shadow-lg transition-all text-center"
             >
               <div className="w-16 h-16 mx-auto bg-[var(--color-islamic-ivory)] rounded-full flex items-center justify-center text-[var(--color-islamic-green)] group-hover:text-white group-hover:bg-[var(--color-islamic-green)] transition-colors shadow-sm mb-6">
                 {item.icon}
@@ -551,7 +510,7 @@ export function Home() {
                   حالة النشر
                 </span>
                 <span className="bg-white/10 border border-white/10 rounded-sm px-3 py-2">
-                  مصادر موثقة
+                  لوحة تحكم لاحقة
                 </span>
               </div>
             </div>
