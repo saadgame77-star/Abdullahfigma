@@ -7,7 +7,6 @@ import { Lectures } from "./pages/Lectures";
 import { Series } from "./pages/Series";
 import { Words } from "./pages/Words";
 import { Shorts } from "./pages/Shorts";
-import { Recitations } from "./pages/Recitations";
 import { Contact } from "./pages/Contact";
 
 export const router = createBrowserRouter(
@@ -23,7 +22,6 @@ export const router = createBrowserRouter(
         { path: "series", Component: Series },
         { path: "words", Component: Words },
         { path: "shorts", Component: Shorts },
-        { path: "recitations", Component: Recitations },
         { path: "contact", Component: Contact },
         {
           path: "*",
