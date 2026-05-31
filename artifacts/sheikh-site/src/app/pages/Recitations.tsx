@@ -1,269 +1,400 @@
-import { Outlet, NavLink, Link } from "react-router";
 import {
   BookOpen,
-  CalendarDays,
+  Clock,
+  Download,
+  ExternalLink,
+  FileText,
+  Mic,
+  Play,
+  Search,
   Video,
-  MessageCircle,
-  Phone,
-  Menu,
+  Volume2,
   X,
-  Mic2,
-  Library,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { miscItems, miscSections, type MiscItem } from "../data/miscItems";
 
-export function Layout() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+function getSectionIcon(icon: string) {
+  if (icon === "book") return BookOpen;
+  if (icon === "video") return Video;
+  if (icon === "audio") return Volume2;
+  if (icon === "mic") return Mic;
+  return FileText;
+}
 
-  const navLinks = [
-    { name: "الرئيسية", path: "/", icon: <BookOpen className="w-4 h-4" /> },
-    {
-      name: "الدروس العلمية",
-      path: "/lessons",
-      icon: <BookOpen className="w-4 h-4" />,
-    },
-    {
-      name: "المحاضرات",
-      path: "/lectures",
-      icon: <Mic2 className="w-4 h-4" />,
-    },
-    {
-      name: "الكلمات الدعوية",
-      path: "/words",
-      icon: <MessageCircle className="w-4 h-4" />,
-    },
-    {
-      name: "المقاطع القصيرة",
-      path: "/shorts",
-      icon: <Video className="w-4 h-4" />,
-    },
-    {
-      name: "متفرقات",
-      path: "/recitations",
-      icon: <Library className="w-4 h-4" />,
-    },
-    {
-      name: "جدول المحاضرات والدروس",
-      path: "/schedule",
-      icon: <CalendarDays className="w-4 h-4" />,
-    },
-    {
-      name: "تواصل معنا",
-      path: "/contact",
-      icon: <Phone className="w-4 h-4" />,
-    },
-  ];
+function getItemIcon(kind: string) {
+  if (kind === "كتاب إلكتروني") return BookOpen;
+  if (kind === "خطبة" || kind === "صوتية") return Volume2;
+  if (kind === "مرئية") return Video;
+  if (kind === "تلاوة") return Mic;
+  return FileText;
+}
+
+function getYouTubeEmbedUrl(videoId: string) {
+  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`;
+}
+
+function getActionLabel(item: MiscItem) {
+  if (item.downloadLabel) return item.downloadLabel;
+  if (item.fileUrl) return "تحميل الملف";
+  if (item.externalUrl) return "فتح الرابط";
+  if (item.audioUrl) return "استماع";
+  if (item.videoId) return "مشاهدة";
+  return "قيد الإضافة";
+}
+
+function hasPlayableContent(item: MiscItem) {
+  return Boolean(
+    item.audioUrl || item.videoId || item.fileUrl || item.externalUrl,
+  );
+}
+
+export function Recitations() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeSectionSlug, setActiveSectionSlug] = useState("all");
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+
+  const visibleSections = useMemo(() => {
+    return miscSections.filter((section) => section.publishStatus === "منشور");
+  }, []);
+
+  const visibleItems = useMemo(() => {
+    return miscItems.filter((item) => item.publishStatus === "منشور");
+  }, []);
+
+  const sectionsWithAll = useMemo(() => {
+    return [
+      {
+        id: 0,
+        title: "الكل",
+        slug: "all",
+        description: "عرض جميع المواد المتاحة.",
+        icon: "file" as const,
+        publishStatus: "منشور" as const,
+        displayOrder: 0,
+      },
+      ...visibleSections,
+    ];
+  }, [visibleSections]);
+
+  const filteredItems = useMemo(() => {
+    return visibleItems.filter((item) => {
+      const search = searchTerm.trim();
+
+      const matchesSearch =
+        search === "" ||
+        item.title.includes(search) ||
+        item.kind.includes(search) ||
+        item.category.includes(search) ||
+        item.knowledgeArea?.includes(search) ||
+        item.subCategory?.includes(search) ||
+        item.tags.some((tag) => tag.includes(search));
+
+      const matchesSection =
+        activeSectionSlug === "all" || item.sectionSlug === activeSectionSlug;
+
+      return matchesSearch && matchesSection;
+    });
+  }, [activeSectionSlug, searchTerm, visibleItems]);
+
+  const selectedItem =
+    filteredItems.find((item) => item.id === selectedItemId) ??
+    filteredItems[0] ??
+    null;
+
+  const activeSection =
+    sectionsWithAll.find((section) => section.slug === activeSectionSlug) ??
+    sectionsWithAll[0];
+
+  function resetFilters() {
+    setSearchTerm("");
+    setActiveSectionSlug("all");
+    setSelectedItemId(null);
+  }
+
+  function selectSection(slug: string) {
+    setActiveSectionSlug(slug);
+    setSelectedItemId(null);
+  }
+
+  function selectItem(itemId: number) {
+    setSelectedItemId(itemId);
+  }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-[var(--color-islamic-ivory)]">
-      <header className="bg-[var(--color-islamic-green)] text-white shadow-md relative z-50">
-        <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-islamic-gold)]"></div>
-
-        <div className="container mx-auto px-4">
-          <div className="relative flex items-center justify-center py-6 border-b border-[var(--color-islamic-green-light)]/40">
-            <Link to="/" className="flex items-center gap-5 group">
-              <div className="w-16 h-16 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45 group-hover:rotate-0 transition-transform duration-500 shadow-lg border-2 border-[var(--color-islamic-green)] outline outline-1 outline-[var(--color-islamic-gold)]">
-                <span className="font-serif text-3xl text-[var(--color-islamic-green)] -rotate-45 group-hover:rotate-0 transition-transform duration-500 font-bold">
-                  ع
-                </span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3 whitespace-nowrap text-center sm:text-right">
-                <span className="font-sans text-[var(--color-islamic-gold)] text-sm md:text-base font-medium tracking-wider">
-                  الموقع الرسمي للشيخ
-                </span>
-
-                <h1 className="font-serif text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-white">
-                  عبدالله بن سعد آل غلفيص
-                </h1>
-              </div>
-            </Link>
-
-            <button
-              className="lg:hidden absolute left-0 p-2 text-white hover:text-[var(--color-islamic-gold)] transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="فتح القائمة"
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-7 h-7" />
-              ) : (
-                <Menu className="w-7 h-7" />
-              )}
-            </button>
+    <div className="animate-in fade-in duration-500">
+      <section className="container mx-auto px-4 py-6">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
+              متفرقات
+            </h1>
+            <div className="mt-3 h-1 w-20 bg-[var(--color-islamic-gold)]" />
           </div>
 
-          <nav className="hidden lg:flex items-center justify-center gap-1 py-2">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                className={({ isActive }) =>
-                  `px-3 xl:px-4 py-2.5 rounded-sm flex items-center gap-1.5 transition-all duration-300 font-medium whitespace-nowrap text-sm ${
-                    isActive
-                      ? "bg-[var(--color-islamic-green-light)] text-[var(--color-islamic-gold)] border-b-2 border-[var(--color-islamic-gold)]"
-                      : "hover:bg-[var(--color-islamic-green-light)] hover:text-[var(--color-islamic-gold-light)] text-gray-200"
-                  }`
-                }
-              >
-                <span className="hidden xl:inline-flex">{link.icon}</span>
-                <span>{link.name}</span>
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-[var(--color-islamic-green-light)] border-t border-[var(--color-islamic-green-dark)]">
-            <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
-              {navLinks.map((link) => (
-                <NavLink
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `px-4 py-3 rounded-sm flex items-center gap-3 transition-all ${
-                      isActive
-                        ? "bg-[var(--color-islamic-green)] text-[var(--color-islamic-gold)] border-r-4 border-[var(--color-islamic-gold)]"
-                        : "text-gray-200 hover:bg-[var(--color-islamic-green)] hover:text-[var(--color-islamic-gold-light)]"
-                    }`
-                  }
-                >
-                  {link.icon}
-                  <span className="font-medium text-lg">{link.name}</span>
-                </NavLink>
-              ))}
+          <div className="w-full lg:max-w-md">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="ابحث في التلاوات والخطب والملفات..."
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setSelectedItemId(null);
+                }}
+                className="w-full rounded-sm border border-gray-200 bg-white py-3 px-4 pr-12 shadow-sm transition-all focus:border-[var(--color-islamic-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-islamic-gold)]"
+              />
+              <Search className="absolute right-4 top-3.5 h-5 w-5 text-gray-400" />
             </div>
           </div>
-        )}
-      </header>
+        </div>
 
-      <main className="flex-grow">
-        <Outlet />
-      </main>
+        <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+          {sectionsWithAll.map((section) => {
+            const Icon = getSectionIcon(section.icon);
+            const isActive = activeSectionSlug === section.slug;
 
-      <footer className="bg-[var(--color-islamic-green-dark)] text-gray-300 pt-16 pb-8 border-t-[6px] border-[var(--color-islamic-gold)]">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45">
-                  <span className="font-serif text-xl text-[var(--color-islamic-green-dark)] -rotate-45 font-bold">
-                    ع
+            return (
+              <button
+                key={section.slug}
+                type="button"
+                onClick={() => selectSection(section.slug)}
+                className={`inline-flex shrink-0 items-center gap-2 rounded-sm px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-[var(--color-islamic-green)] text-white"
+                    : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 ${
+                    isActive
+                      ? "text-[var(--color-islamic-gold)]"
+                      : "text-gray-400"
+                  }`}
+                />
+                {section.title}
+              </button>
+            );
+          })}
+        </div>
+
+        {selectedItem ? (
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_360px]">
+            <main className="overflow-hidden rounded-sm border border-gray-200 bg-white shadow-sm">
+              <div className="bg-[var(--color-islamic-green-dark)] px-5 py-4 text-white">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[var(--color-islamic-gold)]">
+                      {selectedItem.kind}
+                    </p>
+                    <h2 className="mt-1 font-serif text-lg font-bold sm:text-xl">
+                      {selectedItem.title}
+                    </h2>
+                  </div>
+
+                  {(() => {
+                    const Icon = getItemIcon(selectedItem.kind);
+                    return (
+                      <Icon className="h-6 w-6 shrink-0 text-[var(--color-islamic-gold)]" />
+                    );
+                  })()}
+                </div>
+              </div>
+
+              <div className="bg-[#050505] p-4 sm:p-6">
+                {selectedItem.videoId ? (
+                  <div className="mx-auto aspect-video w-full max-w-5xl overflow-hidden rounded-sm bg-black">
+                    <iframe
+                      key={selectedItem.videoId}
+                      className="h-full w-full border-0"
+                      src={getYouTubeEmbedUrl(selectedItem.videoId)}
+                      title={selectedItem.title}
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : selectedItem.audioUrl ? (
+                  <div className="mx-auto max-w-3xl rounded-sm border border-white/10 bg-white/5 p-6">
+                    <div className="mb-5 flex items-center gap-4">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-[var(--color-islamic-gold)] bg-[var(--color-islamic-green)]">
+                        <Volume2 className="h-8 w-8 text-[var(--color-islamic-gold)]" />
+                      </div>
+
+                      <div className="min-w-0">
+                        <h3 className="font-serif text-xl font-bold text-white">
+                          {selectedItem.title}
+                        </h3>
+
+                        {selectedItem.duration && (
+                          <p className="mt-1 flex items-center gap-2 text-sm text-white/60">
+                            <Clock className="h-4 w-4 text-[var(--color-islamic-gold)]" />
+                            {selectedItem.duration}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <audio
+                      src={selectedItem.audioUrl}
+                      controls
+                      className="w-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="mx-auto max-w-3xl rounded-sm border border-white/10 bg-white/5 p-8 text-center">
+                    {(() => {
+                      const Icon = getItemIcon(selectedItem.kind);
+                      return (
+                        <Icon className="mx-auto mb-4 h-16 w-16 text-[var(--color-islamic-gold)]" />
+                      );
+                    })()}
+
+                    <h3 className="font-serif text-2xl font-bold text-white">
+                      {selectedItem.title}
+                    </h3>
+
+                    <p className="mx-auto mt-3 max-w-2xl leading-relaxed text-white/65">
+                      {hasPlayableContent(selectedItem)
+                        ? "يمكن فتح هذه المادة أو تحميلها من الزر أدناه."
+                        : "لم تتم إضافة رابط هذه المادة بعد، وستظهر هنا عند اعتمادها من لوحة التحكم."}
+                    </p>
+
+                    {(selectedItem.fileUrl || selectedItem.externalUrl) && (
+                      <a
+                        href={selectedItem.fileUrl || selectedItem.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-6 inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-gold)] px-5 py-2.5 font-bold text-[var(--color-islamic-green-dark)] transition-colors hover:bg-[var(--color-islamic-gold-light)]"
+                      >
+                        {getActionLabel(selectedItem)}
+                        {selectedItem.fileUrl ? (
+                          <Download className="h-4 w-4" />
+                        ) : (
+                          <ExternalLink className="h-4 w-4" />
+                        )}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-gray-100 px-5 py-4">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-sm bg-[var(--color-islamic-green)] px-3 py-1 text-xs font-bold text-white">
+                    {selectedItem.category}
                   </span>
+
+                  {selectedItem.duration && (
+                    <span className="inline-flex items-center gap-1 rounded-sm border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-bold text-gray-700">
+                      <Clock className="h-3.5 w-3.5 text-[var(--color-islamic-gold)]" />
+                      {selectedItem.duration}
+                    </span>
+                  )}
                 </div>
 
-                <h2 className="font-serif text-2xl text-white">
-                  الشيخ عبدالله آل غلفيص
-                </h2>
+                <p className="leading-relaxed text-gray-600">
+                  {selectedItem.description}
+                </p>
+              </div>
+            </main>
+
+            <aside className="overflow-hidden rounded-sm border border-gray-200 bg-white shadow-sm lg:sticky lg:top-6">
+              <div className="bg-[var(--color-islamic-green-dark)] px-5 py-4 text-white">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-serif text-lg font-bold sm:text-xl">
+                      {activeSection.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-white/70 sm:text-sm">
+                      {filteredItems.length} مادة
+                    </p>
+                  </div>
+
+                  <Play className="h-6 w-6 text-[var(--color-islamic-gold)]" />
+                </div>
               </div>
 
-              <p className="leading-relaxed text-sm opacity-80 max-w-sm">
-                منصة علمية تعنى بنشر السلاسل العلمية، والمحاضرات، والكلمات
-                الدعوية، والمقاطع القصيرة، والمواد المتفرقة، لتكون مرجعًا منظمًا
-                لطالبي العلم.
-              </p>
-            </div>
+              <div className="max-h-[640px] divide-y divide-gray-100 overflow-y-auto">
+                {filteredItems.map((item) => {
+                  const isSelected = selectedItem.id === item.id;
+                  const Icon = getItemIcon(item.kind);
 
-            <div>
-              <h3 className="font-serif text-xl text-[var(--color-islamic-gold)] mb-6 border-b border-[var(--color-islamic-green-light)] pb-3 inline-block">
-                روابط سريعة
-              </h3>
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => selectItem(item.id)}
+                      className={`w-full border-r-2 p-4 text-right transition-colors ${
+                        isSelected
+                          ? "border-r-[var(--color-islamic-gold)] bg-[var(--color-islamic-ivory)]"
+                          : "border-r-transparent bg-white hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex gap-3">
+                        <span
+                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-sm ${
+                            isSelected
+                              ? "bg-[var(--color-islamic-green)] text-white"
+                              : "bg-gray-100 text-[var(--color-islamic-green)]"
+                          }`}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </span>
 
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    to="/lessons"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    الدروس العلمية
-                  </Link>
-                </li>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block line-clamp-2 font-bold leading-relaxed ${
+                              isSelected
+                                ? "text-[var(--color-islamic-green-dark)]"
+                                : "text-gray-800"
+                            }`}
+                          >
+                            {item.title}
+                          </span>
 
-                <li>
-                  <Link
-                    to="/lectures"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    المحاضرات
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/words"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    الكلمات الدعوية
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/shorts"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    المقاطع القصيرة
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/recitations"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    متفرقات
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/schedule"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    جدول المحاضرات والدروس
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-serif text-xl text-[var(--color-islamic-gold)] mb-6 border-b border-[var(--color-islamic-green-light)] pb-3 inline-block">
-                تواصل معنا
-              </h3>
-
-              <p className="text-sm opacity-80 mb-4">
-                يسعدنا تواصلكم واستقبال مقترحاتكم عبر القنوات الرسمية.
-              </p>
-
-              <Link
-                to="/contact"
-                className="inline-block bg-[var(--color-islamic-gold)] text-[var(--color-islamic-green-dark)] px-6 py-2 rounded-sm font-medium hover:bg-white transition-colors"
-              >
-                صفحة التواصل
-              </Link>
-            </div>
+                          <span className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                            <span>{item.kind}</span>
+                            {item.duration && (
+                              <>
+                                <span>•</span>
+                                <span>{item.duration}</span>
+                              </>
+                            )}
+                          </span>
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
           </div>
-
-          <div className="border-t border-[var(--color-islamic-green-light)] pt-8 flex flex-col md:flex-row justify-between items-center text-sm opacity-70">
-            <p>
-              جميع الحقوق محفوظة للموقع الرسمي للشيخ عبدالله بن سعد آل غلفيص ©{" "}
-              {new Date().getFullYear()}
+        ) : (
+          <div className="rounded-sm border border-gray-200 bg-white p-10 text-center">
+            <p className="mb-2 font-serif text-xl font-bold text-[var(--color-islamic-green-dark)] sm:text-2xl">
+              لا توجد مواد منشورة في هذا القسم حاليًا
             </p>
 
-            <div className="mt-4 md:mt-0">
-              <span className="font-serif text-[var(--color-islamic-gold)]">
-                « وفوق كل ذي علم عليم »
-              </span>
-            </div>
+            <p className="mx-auto mb-6 max-w-2xl leading-relaxed text-gray-500">
+              ستظهر هنا المواد بعد اعتمادها ونشرها من لوحة التحكم، ويمكن إضافة
+              أقسام جديدة لاحقًا مثل التلاوات والخطب والكتب الإلكترونية
+              والملفات.
+            </p>
+
+            {(searchTerm || activeSectionSlug !== "all") && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center justify-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-5 py-2.5 font-bold text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]"
+              >
+                <X className="h-4 w-4" />
+                مسح التصفية
+              </button>
+            )}
           </div>
-        </div>
-      </footer>
+        )}
+      </section>
     </div>
   );
 }
