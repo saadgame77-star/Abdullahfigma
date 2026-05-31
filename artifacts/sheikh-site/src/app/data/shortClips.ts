@@ -1,6 +1,9 @@
 export type TrustLevel = "عالٍ" | "متوسط";
 export type PublishStatus = "منشور" | "مخفي" | "مسودة";
 
+export type ShortDisplayMode = "landscape" | "portrait" | "square";
+export type ShortCropMode = "contain" | "fill";
+
 export type ShortClip = {
   id: number;
   title: string;
@@ -17,6 +20,38 @@ export type ShortClip = {
   tags: string[];
   displayOrder: number;
   description: string;
+
+  /**
+   * اختياري:
+   * إذا لم يُحدّد، فالنظام يعرض المقطع كفيديو أفقي 16:9.
+   * لاحقًا في لوحة التحكم يمكن اختيار:
+   * landscape = أفقي
+   * portrait = عمودي
+   * square = مربع
+   */
+  displayMode?: ShortDisplayMode;
+
+  /**
+   * اختياري:
+   * contain = إظهار كامل الفيديو كما هو
+   * fill = ملء الإطار وتقليل الحدود السوداء
+   */
+  cropMode?: ShortCropMode;
+
+  /**
+   * اختياري:
+   * يستخدم لاحقًا للمقاطع التي تحتاج ضبطًا خاصًا.
+   * مثال: 1.05 أو 1.12 أو 1.22
+   */
+  playerScale?: number;
+
+  /**
+   * اختياري:
+   * يستخدم لنسبة مخصصة مثل:
+   * "4 / 5" أو "3 / 4"
+   */
+  aspectRatio?: string;
+
   note?: string;
   sourceTitle?: string;
   sourceUrl?: string;
