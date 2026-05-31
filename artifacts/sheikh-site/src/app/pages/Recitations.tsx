@@ -1,96 +1,269 @@
-import { Mic, PlayCircle, Clock, Download } from "lucide-react";
+import { Outlet, NavLink, Link } from "react-router";
+import {
+  BookOpen,
+  CalendarDays,
+  Video,
+  MessageCircle,
+  Phone,
+  Menu,
+  X,
+  Mic2,
+  Library,
+} from "lucide-react";
+import { useState } from "react";
 
-export function Recitations() {
-  const recitations = [
-    { id: 1, surah: "سورة الفاتحة", type: "تراويح", duration: "01:20", active: true },
-    { id: 2, surah: "سورة البقرة (مقطع)", type: "تراويح", duration: "15:45", active: false },
-    { id: 3, surah: "سورة الكهف", type: "تهجد", duration: "35:10", active: false },
-    { id: 4, surah: "سورة مريم", type: "تراويح", duration: "22:15", active: false },
-    { id: 5, surah: "سورة طه", type: "تهجد", duration: "28:30", active: false },
+export function Layout() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { name: "الرئيسية", path: "/", icon: <BookOpen className="w-4 h-4" /> },
+    {
+      name: "الدروس العلمية",
+      path: "/lessons",
+      icon: <BookOpen className="w-4 h-4" />,
+    },
+    {
+      name: "المحاضرات",
+      path: "/lectures",
+      icon: <Mic2 className="w-4 h-4" />,
+    },
+    {
+      name: "الكلمات الدعوية",
+      path: "/words",
+      icon: <MessageCircle className="w-4 h-4" />,
+    },
+    {
+      name: "المقاطع القصيرة",
+      path: "/shorts",
+      icon: <Video className="w-4 h-4" />,
+    },
+    {
+      name: "متفرقات",
+      path: "/recitations",
+      icon: <Library className="w-4 h-4" />,
+    },
+    {
+      name: "جدول المحاضرات والدروس",
+      path: "/schedule",
+      icon: <CalendarDays className="w-4 h-4" />,
+    },
+    {
+      name: "تواصل معنا",
+      path: "/contact",
+      icon: <Phone className="w-4 h-4" />,
+    },
   ];
 
   return (
-    <div className="container mx-auto px-4 py-12 animate-in fade-in duration-500">
-      <div className="mb-10 text-center">
-        <h1 className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4">التلاوات القرآنية</h1>
-        <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
-        <p className="text-gray-600 max-w-2xl mx-auto">تلاوات خاشعة من صلوات التراويح والتهجد والصلوات الجهرية.</p>
-      </div>
+    <div className="min-h-screen flex flex-col font-sans bg-[var(--color-islamic-ivory)]">
+      <header className="bg-[var(--color-islamic-green)] text-white shadow-md relative z-50">
+        <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-islamic-gold)]"></div>
 
-      <div className="max-w-5xl mx-auto bg-white rounded-sm shadow-lg border border-gray-200 overflow-hidden flex flex-col md:flex-row">
-        
-        {/* Active Player Area */}
-        <div className="md:w-1/2 bg-[var(--color-islamic-green-dark)] text-white p-8 flex flex-col items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.4) 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
-          
-          <div className="w-48 h-48 border-4 border-[var(--color-islamic-gold)] rounded-full flex items-center justify-center mb-8 relative z-10 bg-[var(--color-islamic-green)] shadow-[0_0_30px_rgba(197,160,89,0.3)]">
-             <Mic className="w-20 h-20 text-[var(--color-islamic-gold)]" />
-          </div>
-          
-          <h2 className="font-serif text-3xl font-bold mb-2 z-10 text-center">سورة الفاتحة</h2>
-          <p className="text-[var(--color-islamic-gold-light)] mb-8 z-10">من صلوات التراويح لعام 1444هـ</p>
-          
-          {/* Audio Controls (Visual only) */}
-          <div className="w-full max-w-sm z-10">
-            <div className="bg-white/20 h-1.5 rounded-full mb-3 cursor-pointer">
-              <div className="bg-[var(--color-islamic-gold)] w-1/3 h-full rounded-full relative">
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full"></div>
+        <div className="container mx-auto px-4">
+          <div className="relative flex items-center justify-center py-6 border-b border-[var(--color-islamic-green-light)]/40">
+            <Link to="/" className="flex items-center gap-5 group">
+              <div className="w-16 h-16 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45 group-hover:rotate-0 transition-transform duration-500 shadow-lg border-2 border-[var(--color-islamic-green)] outline outline-1 outline-[var(--color-islamic-gold)]">
+                <span className="font-serif text-3xl text-[var(--color-islamic-green)] -rotate-45 group-hover:rotate-0 transition-transform duration-500 font-bold">
+                  ع
+                </span>
               </div>
-            </div>
-            <div className="flex justify-between text-xs text-gray-300 font-mono mb-6">
-              <span>00:25</span>
-              <span>01:20</span>
-            </div>
-            
-            <div className="flex justify-center items-center gap-6">
-               <button className="text-white hover:text-[var(--color-islamic-gold)] transition-colors">
-                 <svg className="w-6 h-6 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" /></svg>
-               </button>
-               <button className="bg-[var(--color-islamic-gold)] text-[var(--color-islamic-green-dark)] w-14 h-14 rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-lg">
-                 <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
-               </button>
-               <button className="text-white hover:text-[var(--color-islamic-gold)] transition-colors">
-                 <svg className="w-6 h-6 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12.067 11.2a1 1 0 000 1.6l5.333 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.067 11.2a1 1 0 000 1.6l5.333 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.333 4z" /></svg>
-               </button>
-            </div>
-          </div>
-        </div>
 
-        {/* Playlist */}
-        <div className="md:w-1/2 bg-gray-50 flex flex-col h-[500px]">
-          <div className="p-4 bg-white border-b border-gray-200">
-            <h3 className="font-bold text-gray-800">قائمة التلاوات (5)</h3>
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3 whitespace-nowrap text-center sm:text-right">
+                <span className="font-sans text-[var(--color-islamic-gold)] text-sm md:text-base font-medium tracking-wider">
+                  الموقع الرسمي للشيخ
+                </span>
+
+                <h1 className="font-serif text-2xl md:text-3xl lg:text-4xl font-bold tracking-wide text-white">
+                  عبدالله بن سعد آل غلفيص
+                </h1>
+              </div>
+            </Link>
+
+            <button
+              className="lg:hidden absolute left-0 p-2 text-white hover:text-[var(--color-islamic-gold)] transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="فتح القائمة"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-7 h-7" />
+              ) : (
+                <Menu className="w-7 h-7" />
+              )}
+            </button>
           </div>
-          <div className="overflow-y-auto flex-grow p-2 space-y-2">
-            {recitations.map((rec) => (
-              <div 
-                key={rec.id} 
-                className={`flex items-center justify-between p-4 rounded-sm transition-colors border ${
-                  rec.active 
-                    ? 'bg-[var(--color-islamic-green-light)] text-white border-[var(--color-islamic-green)]' 
-                    : 'bg-white border-gray-100 hover:border-[var(--color-islamic-gold-light)] text-gray-700'
-                }`}
+
+          <nav className="hidden lg:flex items-center justify-center gap-1 py-2">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                className={({ isActive }) =>
+                  `px-3 xl:px-4 py-2.5 rounded-sm flex items-center gap-1.5 transition-all duration-300 font-medium whitespace-nowrap text-sm ${
+                    isActive
+                      ? "bg-[var(--color-islamic-green-light)] text-[var(--color-islamic-gold)] border-b-2 border-[var(--color-islamic-gold)]"
+                      : "hover:bg-[var(--color-islamic-green-light)] hover:text-[var(--color-islamic-gold-light)] text-gray-200"
+                  }`
+                }
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-sm flex items-center justify-center shrink-0 bg-black/10">
-                    <PlayCircle className={`w-6 h-6 ${rec.active ? 'text-[var(--color-islamic-gold)]' : 'text-gray-400'}`} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold">{rec.surah}</h4>
-                    <span className={`text-xs ${rec.active ? 'text-gray-200' : 'text-gray-500'}`}>{rec.type}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className={`text-sm font-mono ${rec.active ? 'text-gray-200' : 'text-gray-500'}`}>{rec.duration}</span>
-                  <button className={`p-2 rounded-full hover:bg-black/10 transition-colors ${rec.active ? 'text-white' : 'text-gray-400 hover:text-[var(--color-islamic-green)]'}`}>
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+                <span className="hidden xl:inline-flex">{link.icon}</span>
+                <span>{link.name}</span>
+              </NavLink>
             ))}
+          </nav>
+        </div>
+
+        {isMobileMenuOpen && (
+          <div className="lg:hidden bg-[var(--color-islamic-green-light)] border-t border-[var(--color-islamic-green-dark)]">
+            <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
+              {navLinks.map((link) => (
+                <NavLink
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `px-4 py-3 rounded-sm flex items-center gap-3 transition-all ${
+                      isActive
+                        ? "bg-[var(--color-islamic-green)] text-[var(--color-islamic-gold)] border-r-4 border-[var(--color-islamic-gold)]"
+                        : "text-gray-200 hover:bg-[var(--color-islamic-green)] hover:text-[var(--color-islamic-gold-light)]"
+                    }`
+                  }
+                >
+                  {link.icon}
+                  <span className="font-medium text-lg">{link.name}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        )}
+      </header>
+
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+
+      <footer className="bg-[var(--color-islamic-green-dark)] text-gray-300 pt-16 pb-8 border-t-[6px] border-[var(--color-islamic-gold)]">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45">
+                  <span className="font-serif text-xl text-[var(--color-islamic-green-dark)] -rotate-45 font-bold">
+                    ع
+                  </span>
+                </div>
+
+                <h2 className="font-serif text-2xl text-white">
+                  الشيخ عبدالله آل غلفيص
+                </h2>
+              </div>
+
+              <p className="leading-relaxed text-sm opacity-80 max-w-sm">
+                منصة علمية تعنى بنشر السلاسل العلمية، والمحاضرات، والكلمات
+                الدعوية، والمقاطع القصيرة، والمواد المتفرقة، لتكون مرجعًا منظمًا
+                لطالبي العلم.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-serif text-xl text-[var(--color-islamic-gold)] mb-6 border-b border-[var(--color-islamic-green-light)] pb-3 inline-block">
+                روابط سريعة
+              </h3>
+
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    to="/lessons"
+                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-[var(--color-islamic-gold)]">▪</span>
+                    الدروس العلمية
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/lectures"
+                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-[var(--color-islamic-gold)]">▪</span>
+                    المحاضرات
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/words"
+                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-[var(--color-islamic-gold)]">▪</span>
+                    الكلمات الدعوية
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/shorts"
+                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-[var(--color-islamic-gold)]">▪</span>
+                    المقاطع القصيرة
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/recitations"
+                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-[var(--color-islamic-gold)]">▪</span>
+                    متفرقات
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/schedule"
+                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-[var(--color-islamic-gold)]">▪</span>
+                    جدول المحاضرات والدروس
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-serif text-xl text-[var(--color-islamic-gold)] mb-6 border-b border-[var(--color-islamic-green-light)] pb-3 inline-block">
+                تواصل معنا
+              </h3>
+
+              <p className="text-sm opacity-80 mb-4">
+                يسعدنا تواصلكم واستقبال مقترحاتكم عبر القنوات الرسمية.
+              </p>
+
+              <Link
+                to="/contact"
+                className="inline-block bg-[var(--color-islamic-gold)] text-[var(--color-islamic-green-dark)] px-6 py-2 rounded-sm font-medium hover:bg-white transition-colors"
+              >
+                صفحة التواصل
+              </Link>
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--color-islamic-green-light)] pt-8 flex flex-col md:flex-row justify-between items-center text-sm opacity-70">
+            <p>
+              جميع الحقوق محفوظة للموقع الرسمي للشيخ عبدالله بن سعد آل غلفيص ©{" "}
+              {new Date().getFullYear()}
+            </p>
+
+            <div className="mt-4 md:mt-0">
+              <span className="font-serif text-[var(--color-islamic-gold)]">
+                « وفوق كل ذي علم عليم »
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

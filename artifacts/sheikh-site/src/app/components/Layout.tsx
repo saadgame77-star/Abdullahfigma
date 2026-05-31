@@ -2,13 +2,13 @@ import { Outlet, NavLink, Link } from "react-router";
 import {
   BookOpen,
   CalendarDays,
-  PlaySquare,
   Video,
   MessageCircle,
   Phone,
   Menu,
   X,
   Mic2,
+  Library,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -36,6 +36,11 @@ export function Layout() {
       name: "المقاطع القصيرة",
       path: "/shorts",
       icon: <Video className="w-4 h-4" />,
+    },
+    {
+      name: "متفرقات",
+      path: "/recitations",
+      icon: <Library className="w-4 h-4" />,
     },
     {
       name: "جدول المحاضرات والدروس",
@@ -154,7 +159,8 @@ export function Layout() {
 
               <p className="leading-relaxed text-sm opacity-80 max-w-sm">
                 منصة علمية تعنى بنشر السلاسل العلمية، والمحاضرات، والكلمات
-                الدعوية، والمقاطع القصيرة، لتكون مرجعًا منظمًا لطالبي العلم.
+                الدعوية، والمقاطع القصيرة، والمواد المتفرقة، لتكون مرجعًا منظمًا
+                لطالبي العلم.
               </p>
             </div>
 
@@ -201,6 +207,16 @@ export function Layout() {
                   >
                     <span className="text-[var(--color-islamic-gold)]">▪</span>
                     المقاطع القصيرة
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/recitations"
+                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-[var(--color-islamic-gold)]">▪</span>
+                    متفرقات
                   </Link>
                 </li>
 
