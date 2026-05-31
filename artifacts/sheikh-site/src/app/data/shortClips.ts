@@ -1,8 +1,22 @@
 export type TrustLevel = "عالٍ" | "متوسط";
 export type PublishStatus = "منشور" | "مخفي" | "مسودة";
 
-export type ShortDisplayMode = "landscape" | "portrait" | "square";
-export type ShortCropMode = "contain" | "fill";
+/**
+ * نمط العرض = شكل محتوى الفيديو الحقيقي (وليس شكل الإطار).
+ * auto      = يعامله النظام كأفقي 16:9 (الافتراضي الآمن).
+ * landscape = أفقي 16:9
+ * portrait  = عمودي 9:16
+ * square    = مربع 1:1
+ */
+export type ShortDisplayMode = "auto" | "landscape" | "portrait" | "square";
+
+/**
+ * طريقة احتواء الفيديو داخل الإطار:
+ * smart   = إظهار كامل الفيديو دون قص + خلفية زخرفية للفراغ (الافتراضي الآمن).
+ * contain = إظهار كامل الفيديو دون قص وبلا خلفية مموّهة.
+ * cover   = ملء الإطار وقص الأطراف عمدًا (يُستعمل صراحةً فقط).
+ */
+export type ShortFitMode = "smart" | "contain" | "cover";
 
 export type ShortClip = {
   id: number;
@@ -22,35 +36,29 @@ export type ShortClip = {
   description: string;
 
   /**
-   * اختياري:
-   * إذا لم يُحدّد، فالنظام يعرض المقطع كفيديو أفقي 16:9.
-   * لاحقًا في لوحة التحكم يمكن اختيار:
-   * landscape = أفقي
-   * portrait = عمودي
-   * square = مربع
+   * اختياري. إن لم يُحدّد فهو يُعامل كأفقي 16:9.
+   * يُضبط لاحقًا من لوحة التحكم.
    */
   displayMode?: ShortDisplayMode;
 
   /**
-   * اختياري:
-   * contain = إظهار كامل الفيديو كما هو
-   * fill = ملء الإطار وتقليل الحدود السوداء
+   * اختياري. الافتراضي الآمن = "smart": إظهار كامل الفيديو دون قص،
+   * ومعالجة أي فراغ جانبي (في العمودي/المربع) بخلفية زخرفية احترافية.
+   * لا يُقَصّ الفيديو إطلاقًا إلا إذا اخترت "cover" صراحةً.
    */
-  cropMode?: ShortCropMode;
+  fitMode?: ShortFitMode;
 
   /**
-   * اختياري:
-   * يستخدم لاحقًا للمقاطع التي تحتاج ضبطًا خاصًا.
-   * مثال: 1.05 أو 1.12 أو 1.22
-   */
-  playerScale?: number;
-
-  /**
-   * اختياري:
-   * يستخدم لنسبة مخصصة مثل:
-   * "4 / 5" أو "3 / 4"
+   * اختياري. نسبة عرض مخصّصة للإطار، مثل: "4 / 5" أو "3 / 4".
+   * تتجاوز displayMode إن وُجدت.
    */
   aspectRatio?: string;
+
+  /** اختياري. صورة مصغّرة مخصّصة بدل صورة يوتيوب الافتراضية. */
+  thumbnailUrl?: string;
+
+  /** اختياري. ملاحظة تتعلق بطريقة عرض المقطع (للإدارة لاحقًا). */
+  playerNote?: string;
 
   note?: string;
   sourceTitle?: string;
