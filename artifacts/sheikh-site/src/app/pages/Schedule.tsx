@@ -3,33 +3,64 @@ import {
   CalendarDays,
   Clock,
   ExternalLink,
-  Filter,
   Image,
   Library,
   Link as LinkIcon,
   MapPin,
   Repeat,
   Search,
-  Tags,
+  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { getAllKnowledgeAreaNames } from "../data/knowledgeCategories";
 import { scheduleItems } from "../data/scheduleItems";
 
 const officialScheduleImageUrl = "";
 
+function statusClass(status: string) {
+  if (status === "قائم") {
+    return "bg-emerald-50 text-emerald-800 border-emerald-200";
+  }
+
+  if (status === "مؤجل") {
+    return "bg-amber-50 text-amber-800 border-amber-200";
+  }
+
+  if (status === "متوقف") {
+    return "bg-gray-50 text-gray-700 border-gray-200";
+  }
+
+  return "bg-red-50 text-red-700 border-red-200";
+}
+
+function kindClass(kind: string) {
+  if (kind === "درس") {
+    return "bg-[var(--color-islamic-green)] text-white border-[var(--color-islamic-green)]";
+  }
+
+  return "bg-[var(--color-islamic-ivory)] text-[var(--color-islamic-green-dark)] border-gray-200";
+}
+
+function getWhenText(item: (typeof scheduleItems)[number]) {
+  const parts = [item.day, item.time].filter(Boolean);
+
+  if (parts.length > 0) {
+    return parts.join(" - ");
+  }
+
+  if (item.dateHijri || item.dateGregorian) {
+    return [item.dateHijri, item.dateGregorian].filter(Boolean).join(" - ");
+  }
+
+  return "لم يحدد الموعد بعد";
+}
+
 export function Schedule() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeKnowledgeArea, setActiveKnowledgeArea] = useState("الكل");
   const [activeKind, setActiveKind] = useState("الكل");
   const [activeStatus, setActiveStatus] = useState("الكل");
 
   const visibleScheduleItems = useMemo(() => {
     return scheduleItems.filter((item) => item.publishStatus === "منشور");
-  }, []);
-
-  const knowledgeAreas = useMemo(() => {
-    return ["الكل", ...getAllKnowledgeAreaNames()];
   }, []);
 
   const kinds = useMemo(() => {
@@ -41,7 +72,7 @@ export function Schedule() {
     ];
   }, [visibleScheduleItems]);
 
-  const statuses = ["الكل", "قائم", "متوقف", "مؤجل", "ملغي"];
+  const statuses = ["الكل", "قائم", "مؤجل", "متوقف", "ملغي"];
 
   const filteredScheduleItems = useMemo(() => {
     return visibleScheduleItems.filter((item) => {
@@ -58,27 +89,24 @@ export function Schedule() {
         item.location?.includes(search) ||
         item.tags.some((tag) => tag.includes(search));
 
-      const matchesKnowledgeArea =
-        activeKnowledgeArea === "الكل" ||
-        item.knowledgeArea === activeKnowledgeArea;
-
       const matchesKind =
         activeKind === "الكل" || item.scheduleKind === activeKind;
 
       const matchesStatus =
         activeStatus === "الكل" || item.status === activeStatus;
 
-      return (
-        matchesSearch && matchesKnowledgeArea && matchesKind && matchesStatus
-      );
+      return matchesSearch && matchesKind && matchesStatus;
     });
-  }, [
-    activeKind,
-    activeKnowledgeArea,
-    activeStatus,
-    searchTerm,
-    visibleScheduleItems,
-  ]);
+  }, [activeKind, activeStatus, searchTerm, visibleScheduleItems]);
+
+  const featuredItem =
+    filteredScheduleItems.find((item) => item.status === "قائم") ??
+    filteredScheduleItems[0] ??
+    null;
+
+  const otherItems = featuredItem
+    ? filteredScheduleItems.filter((item) => item.id !== featuredItem.id)
+    : filteredScheduleItems;
 
   const recurringCount = visibleScheduleItems.filter(
     (item) => item.isRecurring,
@@ -88,294 +116,300 @@ export function Schedule() {
     (item) => item.status === "قائم",
   ).length;
 
-  function statusClass(status: string) {
-    if (status === "قائم") return "bg-green-100 text-green-800";
-    if (status === "مؤجل") return "bg-amber-100 text-amber-800";
-    if (status === "متوقف") return "bg-gray-100 text-gray-700";
-    return "bg-red-100 text-red-700";
+  function resetFilters() {
+    setSearchTerm("");
+    setActiveKind("الكل");
+    setActiveStatus("الكل");
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 animate-in fade-in duration-500">
-      <div className="mb-12 text-center">
-        <h1 className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4">
-          جدول المحاضرات والدروس
-        </h1>
-        <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
-        <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          متابعة مواعيد الدروس والمحاضرات والبرامج العلمية، مع دعم المواعيد
-          المتكررة وغير المتكررة، وإظهار حالة كل موعد بمرونة.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-        <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <CalendarDays className="w-6 h-6 text-[var(--color-islamic-gold)]" />
-            <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-              {visibleScheduleItems.length}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600">إجمالي المواعيد المنشورة</p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <Repeat className="w-6 h-6 text-[var(--color-islamic-gold)]" />
-            <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-              {recurringCount}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600">مواعيد متكررة</p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <AlertCircle className="w-6 h-6 text-[var(--color-islamic-gold)]" />
-            <span className="text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-              {activeCount}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600">مواعيد قائمة حاليًا</p>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-sm shadow-sm border border-gray-100 mb-10 flex flex-col gap-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="البحث في الجدول والمواعيد والوسوم..."
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-sm py-3 px-4 pr-12 focus:outline-none focus:border-[var(--color-islamic-gold)] focus:ring-1 focus:ring-[var(--color-islamic-gold)] transition-all"
-          />
-          <Search className="absolute right-4 top-3.5 text-gray-400 w-5 h-5" />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600 ml-2">
-            <Filter className="w-4 h-4" />
-            باب العلم:
+    <div className="animate-in fade-in duration-500">
+      <section className="container mx-auto px-4 py-6">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
+              جدول المحاضرات والدروس
+            </h1>
+            <div className="mt-3 h-1 w-24 bg-[var(--color-islamic-gold)]" />
           </div>
 
-          {knowledgeAreas.map((area) => (
-            <button
-              key={area}
-              onClick={() => setActiveKnowledgeArea(area)}
-              className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
-                activeKnowledgeArea === area
-                  ? "bg-[var(--color-islamic-green)] text-white"
-                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {area}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600 ml-2">
-            <CalendarDays className="w-4 h-4" />
-            نوع الموعد:
-          </div>
-
-          {kinds.map((kind) => (
-            <button
-              key={kind}
-              onClick={() => setActiveKind(kind)}
-              className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
-                activeKind === kind
-                  ? "bg-[var(--color-islamic-green)] text-white"
-                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {kind}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600 ml-2">
-            <AlertCircle className="w-4 h-4" />
-            حالة الموعد:
-          </div>
-
-          {statuses.map((status) => (
-            <button
-              key={status}
-              onClick={() => setActiveStatus(status)}
-              className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
-                activeStatus === status
-                  ? "bg-[var(--color-islamic-green)] text-white"
-                  : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto space-y-12">
-        <section className="bg-white shadow-md border border-gray-200 rounded-sm overflow-hidden">
-          <div className="bg-[var(--color-islamic-green)] text-white p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-            <div>
-              <h2 className="font-serif text-xl font-bold">
-                جدول المواعيد النصي
-              </h2>
-              <p className="text-sm text-white/75 mt-1">
-                يعرض المواعيد المنشورة فقط، مع بيان حالة كل موعد وتكراره.
-              </p>
+          <div className="w-full lg:max-w-md">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="ابحث باسم الدرس أو الموعد..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="w-full rounded-sm border border-gray-200 bg-white py-3 px-4 pr-12 shadow-sm transition-all focus:border-[var(--color-islamic-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-islamic-gold)]"
+              />
+              <Search className="absolute right-4 top-3.5 h-5 w-5 text-gray-400" />
             </div>
           </div>
+        </div>
 
-          {filteredScheduleItems.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-right min-w-[900px]">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="p-4 font-bold text-gray-700">الموعد</th>
-                    <th className="p-4 font-bold text-gray-700">النوع</th>
-                    <th className="p-4 font-bold text-gray-700">
-                      اليوم والوقت
-                    </th>
-                    <th className="p-4 font-bold text-gray-700">المكان</th>
-                    <th className="p-4 font-bold text-gray-700">الحالة</th>
-                    <th className="p-4 font-bold text-gray-700">التكرار</th>
-                  </tr>
-                </thead>
+        <div className="mb-6 space-y-3 rounded-sm border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            {kinds.map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                onClick={() => setActiveKind(kind)}
+                className={`shrink-0 rounded-sm px-4 py-2 text-sm font-medium transition-colors ${
+                  activeKind === kind
+                    ? "bg-[var(--color-islamic-green)] text-white"
+                    : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {kind}
+              </button>
+            ))}
+          </div>
 
-                <tbody>
-                  {filteredScheduleItems.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors align-top"
+          <div className="flex flex-wrap gap-2">
+            {statuses.map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setActiveStatus(status)}
+                className={`shrink-0 rounded-sm px-4 py-2 text-sm font-medium transition-colors ${
+                  activeStatus === status
+                    ? "bg-[var(--color-islamic-green)] text-white"
+                    : "border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {featuredItem ? (
+          <div className="space-y-8">
+            <section className="overflow-hidden rounded-sm border border-gray-200 bg-white shadow-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px]">
+                <div className="p-6 sm:p-8">
+                  <div className="mb-5 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex items-center rounded-sm border px-3 py-1 text-xs font-bold ${kindClass(
+                        featuredItem.scheduleKind,
+                      )}`}
                     >
-                      <td className="p-4">
-                        <h3 className="font-bold text-[var(--color-islamic-green-dark)] mb-1">
-                          {item.title}
-                        </h3>
-                        <p className="text-sm text-gray-500 leading-relaxed">
-                          {item.description}
-                        </p>
+                      {featuredItem.scheduleKind}
+                    </span>
 
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {item.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="inline-flex items-center gap-1 rounded-sm bg-[var(--color-islamic-ivory)] px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-200"
-                            >
-                              <Tags className="w-3 h-3 text-[var(--color-islamic-gold)]" />
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
+                    <span
+                      className={`inline-flex items-center rounded-sm border px-3 py-1 text-xs font-bold ${statusClass(
+                        featuredItem.status,
+                      )}`}
+                    >
+                      {featuredItem.status}
+                    </span>
 
-                      <td className="p-4 text-gray-600">
-                        <div className="space-y-1">
-                          <span className="inline-flex items-center gap-1 rounded-sm bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
-                            {item.scheduleKind}
-                          </span>
-                          <p className="text-sm text-gray-500">
-                            {item.knowledgeArea}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {item.subCategory}
-                          </p>
-                        </div>
-                      </td>
+                    {featuredItem.isRecurring && (
+                      <span className="inline-flex items-center gap-1 rounded-sm border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-bold text-gray-700">
+                        <Repeat className="h-3.5 w-3.5 text-[var(--color-islamic-gold)]" />
+                        {featuredItem.recurrenceType}
+                      </span>
+                    )}
+                  </div>
 
-                      <td className="p-4 text-gray-600">
-                        <div className="space-y-2">
-                          {item.day && (
-                            <span className="flex items-center gap-1">
-                              <CalendarDays className="w-4 h-4 text-[var(--color-islamic-gold)]" />
-                              {item.day}
-                            </span>
-                          )}
+                  <h2 className="font-serif text-2xl font-bold leading-relaxed text-[var(--color-islamic-green-dark)] sm:text-3xl">
+                    {featuredItem.title}
+                  </h2>
 
-                          {item.time && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-4 h-4 text-[var(--color-islamic-gold)]" />
-                              {item.time}
-                            </span>
-                          )}
+                  <p className="mt-4 max-w-3xl leading-relaxed text-gray-600">
+                    {featuredItem.description}
+                  </p>
 
-                          {item.dateHijri && (
-                            <span className="text-sm text-gray-500">
-                              {item.dateHijri}
-                            </span>
-                          )}
-                        </div>
-                      </td>
+                  <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-sm border border-gray-200 bg-[var(--color-islamic-ivory)] p-4">
+                      <span className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--color-islamic-green-dark)]">
+                        <CalendarDays className="h-4 w-4 text-[var(--color-islamic-gold)]" />
+                        الموعد
+                      </span>
+                      <p className="text-gray-700">
+                        {getWhenText(featuredItem)}
+                      </p>
+                    </div>
 
-                      <td className="p-4 text-gray-600">
-                        <div className="space-y-2">
-                          {item.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4 text-[var(--color-islamic-gold)]" />
-                              {item.location}
-                            </span>
-                          )}
+                    <div className="rounded-sm border border-gray-200 bg-[var(--color-islamic-ivory)] p-4">
+                      <span className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--color-islamic-green-dark)]">
+                        <MapPin className="h-4 w-4 text-[var(--color-islamic-gold)]" />
+                        المكان
+                      </span>
+                      <p className="text-gray-700">
+                        {featuredItem.location || "لم يحدد المكان بعد"}
+                      </p>
+                    </div>
+                  </div>
 
-                          {item.onlineUrl && (
-                            <a
-                              href={item.onlineUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[var(--color-islamic-green)] hover:underline"
-                            >
-                              <LinkIcon className="w-4 h-4" />
-                              رابط المتابعة
-                            </a>
-                          )}
-                        </div>
-                      </td>
+                  {featuredItem.onlineUrl && (
+                    <a
+                      href={featuredItem.onlineUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-6 inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-5 py-2.5 font-bold text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]"
+                    >
+                      رابط المتابعة
+                      <LinkIcon className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
 
-                      <td className="p-4">
+                <aside className="border-t border-gray-200 bg-[var(--color-islamic-green-dark)] p-6 text-white lg:border-t-0 lg:border-r">
+                  <p className="text-sm text-white/70">التصنيف العلمي</p>
+                  <h3 className="mt-2 font-serif text-xl font-bold">
+                    {featuredItem.knowledgeArea}
+                  </h3>
+                  <p className="mt-2 text-sm text-white/75">
+                    {featuredItem.subCategory}
+                  </p>
+
+                  {featuredItem.recurrenceDetails && (
+                    <div className="mt-6 rounded-sm border border-white/15 bg-white/5 p-4">
+                      <p className="mb-2 flex items-center gap-2 text-sm font-bold">
+                        <Repeat className="h-4 w-4 text-[var(--color-islamic-gold)]" />
+                        التكرار
+                      </p>
+                      <p className="text-sm leading-relaxed text-white/75">
+                        {featuredItem.recurrenceDetails}
+                      </p>
+                    </div>
+                  )}
+                </aside>
+              </div>
+            </section>
+
+            {otherItems.length > 0 && (
+              <section>
+                <h2 className="mb-4 font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                  مواعيد أخرى
+                </h2>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {otherItems.map((item) => (
+                    <article
+                      key={item.id}
+                      className="rounded-sm border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                    >
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span
-                          className={`inline-flex rounded-sm px-3 py-1 text-xs font-bold ${statusClass(
+                          className={`inline-flex rounded-sm border px-3 py-1 text-xs font-bold ${kindClass(
+                            item.scheduleKind,
+                          )}`}
+                        >
+                          {item.scheduleKind}
+                        </span>
+
+                        <span
+                          className={`inline-flex rounded-sm border px-3 py-1 text-xs font-bold ${statusClass(
                             item.status,
                           )}`}
                         >
                           {item.status}
                         </span>
-                      </td>
+                      </div>
 
-                      <td className="p-4 text-gray-600">
-                        <div className="space-y-1">
-                          <span className="flex items-center gap-1">
-                            <Repeat className="w-4 h-4 text-[var(--color-islamic-gold)]" />
-                            {item.recurrenceType}
-                          </span>
+                      <h3 className="font-serif text-xl font-bold leading-relaxed text-[var(--color-islamic-green-dark)]">
+                        {item.title}
+                      </h3>
 
-                          {item.recurrenceDetails && (
-                            <p className="text-xs text-gray-500 leading-relaxed">
-                              {item.recurrenceDetails}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                      <div className="mt-4 space-y-2 text-sm text-gray-600">
+                        <p className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-[var(--color-islamic-gold)]" />
+                          {getWhenText(item)}
+                        </p>
+
+                        <p className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-[var(--color-islamic-gold)]" />
+                          {item.location || "لم يحدد المكان بعد"}
+                        </p>
+                      </div>
+                    </article>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </section>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-sm border border-gray-200 bg-white p-10 text-center">
+            <p className="mb-2 font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+              لا توجد مواعيد منشورة حاليًا
+            </p>
+
+            <p className="mx-auto mb-6 max-w-2xl leading-relaxed text-gray-500">
+              ستظهر هنا المواعيد المعتمدة عند نشرها في جدول المحاضرات والدروس.
+            </p>
+
+            {(searchTerm ||
+              activeKind !== "الكل" ||
+              activeStatus !== "الكل") && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center justify-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-5 py-2.5 font-bold text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]"
+              >
+                <X className="h-4 w-4" />
+                مسح التصفية
+              </button>
+            )}
+          </div>
+        )}
+
+        <section className="mt-12 rounded-sm border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-serif text-xl font-bold text-[var(--color-islamic-green-dark)]">
+                معلومات الجدول
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                ملخص سريع يظهر بعد المحتوى الأساسي.
+              </p>
             </div>
-          ) : (
-            <div className="p-8 text-center text-gray-500">
-              لا توجد مواعيد منشورة حاليًا.
+
+            <AlertCircle className="h-6 w-6 text-[var(--color-islamic-gold)]" />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="rounded-sm border border-gray-200 bg-gray-50 p-4">
+              <span className="block text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                {visibleScheduleItems.length}
+              </span>
+              <p className="mt-1 text-sm text-gray-600">مواعيد منشورة</p>
             </div>
-          )}
+
+            <div className="rounded-sm border border-gray-200 bg-gray-50 p-4">
+              <span className="block text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                {activeCount}
+              </span>
+              <p className="mt-1 text-sm text-gray-600">مواعيد قائمة</p>
+            </div>
+
+            <div className="rounded-sm border border-gray-200 bg-gray-50 p-4">
+              <span className="block text-2xl font-bold text-[var(--color-islamic-green-dark)]">
+                {recurringCount}
+              </span>
+              <p className="mt-1 text-sm text-gray-600">مواعيد متكررة</p>
+            </div>
+          </div>
         </section>
 
-        <section className="bg-white shadow-md border border-gray-200 rounded-sm overflow-hidden p-6 text-center">
-          <h2 className="font-serif text-xl font-bold mb-6 text-[var(--color-islamic-green-dark)]">
-            صورة الإعلان الرسمي للجدول
-          </h2>
+        <section className="mt-8 rounded-sm border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-serif text-xl font-bold text-[var(--color-islamic-green-dark)]">
+                الإعلان الرسمي للجدول
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                يمكن إضافة صورة الجدول الرسمية لاحقًا عند اعتمادها.
+              </p>
+            </div>
+
+            <Image className="h-6 w-6 text-[var(--color-islamic-gold)]" />
+          </div>
 
           {officialScheduleImageUrl ? (
-            <div className="space-y-5">
+            <div className="space-y-5 text-center">
               <img
                 src={officialScheduleImageUrl}
                 alt="صورة الإعلان الرسمي للجدول"
@@ -386,20 +420,20 @@ export function Schedule() {
                 href={officialScheduleImageUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-[var(--color-islamic-gold)] text-[var(--color-islamic-green-dark)] px-6 py-2 rounded-sm font-bold hover:bg-[var(--color-islamic-gold-light)] transition-colors"
+                className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-gold)] px-6 py-2 font-bold text-[var(--color-islamic-green-dark)] transition-colors hover:bg-[var(--color-islamic-gold-light)]"
               >
                 تحميل الصورة
-                <ExternalLink className="w-4 h-4" />
+                <ExternalLink className="h-4 w-4" />
               </a>
             </div>
           ) : (
-            <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-sm p-12 flex flex-col items-center justify-center text-gray-400">
-              <Image className="w-16 h-16 mb-4 opacity-50" />
-              <p>مكان صورة الجدول الرسمي عند اعتمادها من الإدارة</p>
+            <div className="flex flex-col items-center justify-center rounded-sm border-2 border-dashed border-gray-300 bg-gray-50 p-10 text-center text-gray-400">
+              <Image className="mb-4 h-14 w-14 opacity-50" />
+              <p>سيظهر هنا الإعلان الرسمي عند إضافته.</p>
             </div>
           )}
         </section>
-      </div>
+      </section>
     </div>
   );
 }
