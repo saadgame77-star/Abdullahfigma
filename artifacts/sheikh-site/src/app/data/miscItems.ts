@@ -45,7 +45,7 @@ export type MiscItem = {
   note?: string;
 };
 
-export const miscSections: MiscItemSection[] = [
+const miscSectionEntries: MiscItemSection[] = [
   {
     id: 1,
     title: "التلاوات",
@@ -82,9 +82,9 @@ export const miscSections: MiscItemSection[] = [
     publishStatus: "منشور",
     displayOrder: 4,
   },
-].sort((a, b) => a.displayOrder - b.displayOrder);
+];
 
-export const miscItems: MiscItem[] = [
+const miscItemEntries: MiscItem[] = [
   {
     id: 1,
     title: "سورة الفاتحة",
@@ -121,4 +121,12 @@ export const miscItems: MiscItem[] = [
     description:
       "مادة تجريبية قابلة للاستبدال بالتلاوة المعتمدة عند توفر رابط الصوت أو الملف.",
   },
-].sort((a, b) => a.displayOrder - b.displayOrder);
+];
+
+export const miscSections: MiscItemSection[] = [...miscSectionEntries].sort(
+  (a, b) => a.displayOrder - b.displayOrder,
+);
+
+export const miscItems: MiscItem[] = [...miscItemEntries].sort(
+  (a, b) => a.displayOrder - b.displayOrder,
+);

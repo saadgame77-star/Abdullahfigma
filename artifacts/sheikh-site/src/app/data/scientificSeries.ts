@@ -34,7 +34,7 @@ export type ScientificSeries = {
   note?: string;
 };
 
-export const scientificSeries: ScientificSeries[] = [
+const scientificSeriesEntries: ScientificSeries[] = [
   {
     id: 1,
     title: "التعليق على الملخص الفقهي من كتاب القضاء",
@@ -1209,4 +1209,8 @@ export const scientificSeries: ScientificSeries[] = [
       },
     ],
   },
-].sort((a, b) => a.displayOrder - b.displayOrder);
+];
+
+export const scientificSeries: ScientificSeries[] = [...scientificSeriesEntries].sort(
+  (a, b) => a.displayOrder - b.displayOrder,
+);

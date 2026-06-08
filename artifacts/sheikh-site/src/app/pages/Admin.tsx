@@ -533,10 +533,10 @@ export function Admin() {
                       <div className="flex flex-wrap gap-2">
                         {category.children.map((child) => (
                           <span
-                            key={child}
+                            key={child.id}
                             className="rounded-sm bg-[var(--color-islamic-ivory)] px-3 py-1 text-sm text-gray-700"
                           >
-                            {child}
+                            {child.name}
                           </span>
                         ))}
                       </div>

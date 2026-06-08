@@ -29,7 +29,7 @@ export type ScheduleItem = {
   note?: string;
 };
 
-export const scheduleItems: ScheduleItem[] = [
+const scheduleItemEntries: ScheduleItem[] = [
   {
     id: 1,
     title: "التعليق على تفسير البغوي",
@@ -76,4 +76,8 @@ export const scheduleItems: ScheduleItem[] = [
       "موعد تجريبي لدرس أسبوعي، لا يظهر في الصفحة العامة لأنه محفوظ كمسودة إلى حين اعتماد بيانات الجدول النهائية.",
     note: "بيانات تجريبية إلى حين إضافة الجدول الرسمي.",
   },
-].sort((a, b) => a.displayOrder - b.displayOrder);
+];
+
+export const scheduleItems: ScheduleItem[] = [...scheduleItemEntries].sort(
+  (a, b) => a.displayOrder - b.displayOrder,
+);

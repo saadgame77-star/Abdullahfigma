@@ -23,7 +23,7 @@ export type WordItem = {
   note?: string;
 };
 
-export const words: WordItem[] = [
+const wordItems: WordItem[] = [
   {
     id: 1,
     title: "كلمة توجيهية بعد صلاة العصر بعنوان: فضل الذكر",
@@ -44,4 +44,8 @@ export const words: WordItem[] = [
       "كلمة دعوية موجزة في فضل الذكر وأثره على القلب، مناسبة للإلقاء بعد الصلوات أو في اللقاءات العامة.",
     note: "بيانات تجريبية إلى حين إضافة الرابط والمصدر النهائي.",
   },
-].sort((a, b) => a.displayOrder - b.displayOrder);
+];
+
+export const words: WordItem[] = [...wordItems].sort(
+  (a, b) => a.displayOrder - b.displayOrder,
+);

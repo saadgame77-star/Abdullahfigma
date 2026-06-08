@@ -23,7 +23,7 @@ export type Lecture = {
   note?: string;
 };
 
-export const lectures: Lecture[] = [
+const lectureItems: Lecture[] = [
   {
     id: 1,
     title: "كيف نستقبل شهر رمضان المبارك",
@@ -44,4 +44,8 @@ export const lectures: Lecture[] = [
       "محاضرة عامة في التهيئة الإيمانية لاستقبال شهر رمضان، واغتنام موسمه بالطاعة والعمل الصالح.",
     note: "بيانات تجريبية إلى حين إضافة الرابط والمصدر النهائي.",
   },
-].sort((a, b) => a.displayOrder - b.displayOrder);
+];
+
+export const lectures: Lecture[] = [...lectureItems].sort(
+  (a, b) => a.displayOrder - b.displayOrder,
+);

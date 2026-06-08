@@ -65,7 +65,7 @@ export type ShortClip = {
   sourceUrl?: string;
 };
 
-export const shortClips: ShortClip[] = [
+const shortClipEntries: ShortClip[] = [
   {
     id: 1,
     title: "تعليم الناس بالتلطف واللين",
@@ -204,4 +204,8 @@ export const shortClips: ShortClip[] = [
     displayOrder: 8,
     description: "تنبيه فقهي مختصر في شأن تسوية الصفوف وأهميتها في الصلاة.",
   },
-].sort((a, b) => a.displayOrder - b.displayOrder);
+];
+
+export const shortClips: ShortClip[] = [...shortClipEntries].sort(
+  (a, b) => a.displayOrder - b.displayOrder,
+);
