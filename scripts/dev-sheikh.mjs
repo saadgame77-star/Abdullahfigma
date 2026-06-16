@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import http from "node:http";
+import net from "node:net";
 
 const API_PORT = 8080;
 const SITE_PORT = 24740;
@@ -7,6 +8,14 @@ const API_URL = `http://127.0.0.1:${API_PORT}`;
 const SITE_URL = `http://127.0.0.1:${SITE_PORT}`;
 
 const children = new Set();
+
+const DEV_PATTERNS = [
+  "[p]npm -C artifacts/api-server run dev",
+  "[n]ode --enable-source-maps ./dist/index.mjs",
+  "[p]npm -C artifacts/sheikh-site run dev",
+  "[v]ite --config vite.config.ts",
+  "artifacts/mockup-sandbox",
+];
 
 function log(label, message) {
   process.stdout.write(`[${label}] ${message}`);
@@ -18,155 +27,104 @@ function runShell(command) {
       stdio: "ignore",
       env: process.env,
     });
-
     child.on("close", () => resolve());
     child.on("error", () => resolve());
   });
 }
 
-// Forcibly release a TCP port using whichever tool is available (fuser/lsof).
-function freePort(port) {
-  return runShell(
-    `fuser -k -9 ${port}/tcp 2>/dev/null; lsof -t -i:${port} 2>/dev/null | xargs -r kill -9 2>/dev/null; true`,
-  );
+async function killDevPatterns() {
+  for (const pattern of DEV_PATTERNS) {
+    await runShell(`pkill -9 -f "${pattern}" || true`);
+  }
 }
 
-// Resolves true when nothing is listening on the port.
 function isPortFree(port) {
   return new Promise((resolve) => {
-    const child = spawn("bash", ["-lc", `lsof -i:${port} >/dev/null 2>&1`], {
-      stdio: "ignore",
+    const socket = net.connect({ host: "127.0.0.1", port });
+    socket.once("connect", () => {
+      socket.destroy();
+      resolve(false);
     });
-    // lsof exits 0 when a listener exists (port busy), non-zero when free.
-    child.on("close", (code) => resolve(code !== 0));
-    child.on("error", () => resolve(true));
+    socket.once("error", () => resolve(true));
+    socket.setTimeout(1000, () => {
+      socket.destroy();
+      resolve(true);
+    });
   });
 }
 
-// Keeps killing whatever holds the ports until they are actually free,
-// so a stale dev server (or a double Run/Shell launch) never blocks startup.
-async function waitForPortsFree(ports, timeoutMs = 10000) {
+async function waitForPortsFree(ports, timeoutMs = 15000) {
   const startedAt = Date.now();
-
   while (Date.now() - startedAt < timeoutMs) {
     const states = await Promise.all(ports.map(isPortFree));
     if (states.every(Boolean)) return;
-
-    for (const port of ports) {
-      await freePort(port);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await killDevPatterns();
+    await new Promise((resolve) => setTimeout(resolve, 700));
   }
 }
 
 async function stopOldProcesses() {
   console.log("إيقاف العمليات القديمة المرتبطة بموقع الشيخ والموك أب...");
-
-  const patterns = [
-    "[p]npm -C artifacts/api-server run dev",
-    "[n]ode --enable-source-maps ./dist/index.mjs",
-    "[p]npm -C artifacts/sheikh-site run dev",
-    "[v]ite --config vite.config.ts",
-    "artifacts/mockup-sandbox",
-  ];
-
-  for (const pattern of patterns) {
-    await runShell(`pkill -f "${pattern}" || true`);
-  }
-
-  // Robustly free the fixed ports by number (covers stale listeners that the
-  // name-based pkill above may miss, e.g. a leftover Run or Shell instance).
-  for (const port of [API_PORT, SITE_PORT]) {
-    await freePort(port);
-  }
-
+  await killDevPatterns();
   await waitForPortsFree([API_PORT, SITE_PORT]);
 }
 
 function spawnProcess(label, command, args, env) {
   const child = spawn(command, args, {
     cwd: process.cwd(),
-    env: {
-      ...process.env,
-      ...env,
-    },
+    env: { ...process.env, ...env },
     stdio: ["ignore", "pipe", "pipe"],
   });
-
   children.add(child);
-
-  child.stdout.on("data", (chunk) => {
-    log(label, chunk.toString());
-  });
-
-  child.stderr.on("data", (chunk) => {
-    log(label, chunk.toString());
-  });
-
+  child.stdout.on("data", (chunk) => log(label, chunk.toString()));
+  child.stderr.on("data", (chunk) => log(label, chunk.toString()));
   child.on("exit", (code, signal) => {
     children.delete(child);
-
     if (signal) {
       console.log(`[${label}] توقف بالإشارة: ${signal}`);
       return;
     }
-
     if (code !== 0) {
       console.error(`[${label}] توقف بخطأ. Exit code: ${code}`);
       shutdown(1);
     }
   });
-
   return child;
 }
 
 function waitForUrl(url, expectedStatuses, label, timeoutMs = 30000) {
   const startedAt = Date.now();
-
   return new Promise((resolve, reject) => {
     function attempt() {
       const request = http.get(url, (response) => {
         response.resume();
-
         if (expectedStatuses.includes(response.statusCode ?? 0)) {
           resolve();
           return;
         }
-
         retry();
       });
-
       request.on("error", retry);
       request.setTimeout(3000, () => {
         request.destroy();
         retry();
       });
     }
-
     function retry() {
       if (Date.now() - startedAt > timeoutMs) {
         reject(new Error(`تعذر تشغيل ${label} خلال المهلة المحددة: ${url}`));
         return;
       }
-
       setTimeout(attempt, 1000);
     }
-
     attempt();
   });
 }
 
 function shutdown(code = 0) {
-  for (const child of children) {
-    child.kill("SIGTERM");
-  }
-
+  for (const child of children) child.kill("SIGTERM");
   setTimeout(() => {
-    for (const child of children) {
-      child.kill("SIGKILL");
-    }
-
+    for (const child of children) child.kill("SIGKILL");
     process.exit(code);
   }, 1500);
 }
@@ -178,38 +136,26 @@ await stopOldProcesses();
 
 console.log("تشغيل API على المنفذ 8080...");
 
-spawnProcess(
-  "api",
-  "pnpm",
-  ["-C", "artifacts/api-server", "run", "dev"],
-  {
-    PORT: String(API_PORT),
-    ALLOWED_ORIGINS: [
-      process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "",
-      `http://localhost:${SITE_PORT}`,
-      `http://127.0.0.1:${SITE_PORT}`,
-    ]
-      .filter(Boolean)
-      .join(","),
-  },
-);
+spawnProcess("api", "pnpm", ["-C", "artifacts/api-server", "run", "dev"], {
+  PORT: String(API_PORT),
+  ALLOWED_ORIGINS: [
+    process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "",
+    `http://localhost:${SITE_PORT}`,
+    `http://127.0.0.1:${SITE_PORT}`,
+  ]
+    .filter(Boolean)
+    .join(","),
+});
 
 await waitForUrl(`${API_URL}/api/admin/auth/me`, [401], "API");
-
 console.log("API يعمل بنجاح.");
-
 console.log("تشغيل موقع الشيخ على المنفذ 24740...");
 
-spawnProcess(
-  "site",
-  "pnpm",
-  ["-C", "artifacts/sheikh-site", "run", "dev"],
-  {
-    PORT: String(SITE_PORT),
-    BASE_PATH: "/",
-    VITE_API_PROXY_TARGET: API_URL,
-  },
-);
+spawnProcess("site", "pnpm", ["-C", "artifacts/sheikh-site", "run", "dev"], {
+  PORT: String(SITE_PORT),
+  BASE_PATH: "/",
+  VITE_API_PROXY_TARGET: API_URL,
+});
 
 await waitForUrl(`${SITE_URL}/api/admin/auth/me`, [401], "موقع الشيخ مع proxy");
 
