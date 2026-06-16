@@ -24,6 +24,42 @@ function runShell(command) {
   });
 }
 
+// Forcibly release a TCP port using whichever tool is available (fuser/lsof).
+function freePort(port) {
+  return runShell(
+    `fuser -k -9 ${port}/tcp 2>/dev/null; lsof -t -i:${port} 2>/dev/null | xargs -r kill -9 2>/dev/null; true`,
+  );
+}
+
+// Resolves true when nothing is listening on the port.
+function isPortFree(port) {
+  return new Promise((resolve) => {
+    const child = spawn("bash", ["-lc", `lsof -i:${port} >/dev/null 2>&1`], {
+      stdio: "ignore",
+    });
+    // lsof exits 0 when a listener exists (port busy), non-zero when free.
+    child.on("close", (code) => resolve(code !== 0));
+    child.on("error", () => resolve(true));
+  });
+}
+
+// Keeps killing whatever holds the ports until they are actually free,
+// so a stale dev server (or a double Run/Shell launch) never blocks startup.
+async function waitForPortsFree(ports, timeoutMs = 10000) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const states = await Promise.all(ports.map(isPortFree));
+    if (states.every(Boolean)) return;
+
+    for (const port of ports) {
+      await freePort(port);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+}
+
 async function stopOldProcesses() {
   console.log("إيقاف العمليات القديمة المرتبطة بموقع الشيخ والموك أب...");
 
@@ -39,7 +75,13 @@ async function stopOldProcesses() {
     await runShell(`pkill -f "${pattern}" || true`);
   }
 
-  await new Promise((resolve) => setTimeout(resolve, 2500));
+  // Robustly free the fixed ports by number (covers stale listeners that the
+  // name-based pkill above may miss, e.g. a leftover Run or Shell instance).
+  for (const port of [API_PORT, SITE_PORT]) {
+    await freePort(port);
+  }
+
+  await waitForPortsFree([API_PORT, SITE_PORT]);
 }
 
 function spawnProcess(label, command, args, env) {
