@@ -23,8 +23,9 @@ import {
   UserCog,
   Video,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SeriesManager } from "../components/admin/SeriesManager";
+import { LecturesManager } from "../components/admin/LecturesManager";
 import { adminApi, type AdminStats } from "../lib/adminApi";
 import { adminSections, type AdminSection } from "../data/adminSections";
 import { adminSupervisors } from "../data/adminSupervisors";
@@ -89,20 +90,18 @@ export function Admin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [liveStats, setLiveStats] = useState<AdminStats | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const refreshStats = useCallback(() => {
     adminApi
       .getStats()
-      .then((result) => {
-        if (isMounted) setLiveStats(result);
-      })
+      .then((result) => setLiveStats(result))
       .catch(() => {
-        if (isMounted) setLiveStats(null);
+        /* keep last known stats on transient failure */
       });
-    return () => {
-      isMounted = false;
-    };
   }, []);
+
+  useEffect(() => {
+    refreshStats();
+  }, [refreshStats]);
 
   const contentItems: ContentItem[] = useMemo(() => {
     const seriesItems: ContentItem[] = scientificSeries.map((series) => ({
@@ -207,6 +206,8 @@ export function Admin() {
     if (section === "overview") return contentItems.length;
     if (section === "series")
       return liveStats?.totals.series ?? scientificSeries.length;
+    if (section === "lectures")
+      return liveStats?.totals.lectures ?? 0;
     if (section === "knowledge") return knowledgeCategories.length;
     if (section === "tags") return adminTags.length;
     if (section === "supervisors") return adminSupervisors.length;
@@ -332,15 +333,19 @@ export function Admin() {
                   </h2>
                 </div>
 
-                {activeSection !== "overview" && activeSection !== "series" && (
-                  <button className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]">
-                    <Plus className="h-4 w-4" />
-                    إضافة جديد
-                  </button>
-                )}
+                {activeSection !== "overview" &&
+                  activeSection !== "series" &&
+                  activeSection !== "lectures" && (
+                    <button className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]">
+                      <Plus className="h-4 w-4" />
+                      إضافة جديد
+                    </button>
+                  )}
               </div>
 
-              {activeSection !== "overview" && activeSection !== "series" && (
+              {activeSection !== "overview" &&
+                activeSection !== "series" &&
+                activeSection !== "lectures" && (
                 <div className="relative">
                   <input
                     type="text"
@@ -420,11 +425,15 @@ export function Admin() {
               </section>
             )}
 
-            {activeSection === "series" && <SeriesManager />}
+            {activeSection === "series" && (
+              <SeriesManager onMutate={refreshStats} />
+            )}
 
-            {["shorts", "lectures", "words", "schedule"].includes(
-              activeSection,
-            ) && (
+            {activeSection === "lectures" && (
+              <LecturesManager onMutate={refreshStats} />
+            )}
+
+            {["shorts", "words", "schedule"].includes(activeSection) && (
               <section className="overflow-x-auto">
                 <table className="w-full min-w-[820px] text-right">
                   <thead className="bg-gray-50 text-sm text-gray-500">

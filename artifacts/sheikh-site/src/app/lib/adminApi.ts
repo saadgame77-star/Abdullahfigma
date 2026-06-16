@@ -46,6 +46,56 @@ export type SeriesInput = {
   subcategoryId?: string | null;
 };
 
+export type LectureType =
+  | "محاضرة عامة"
+  | "لقاء علمي"
+  | "كلمة مطولة"
+  | "برنامج";
+
+export type LectureItem = {
+  id: string;
+  title: string;
+  lectureType: LectureType;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  channel: string | null;
+  videoId: string | null;
+  url: string;
+  duration: string | null;
+  durationSeconds: number | null;
+  dateHijri: string | null;
+  dateGregorian: string | null;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LectureInput = {
+  title: string;
+  lectureType: LectureType;
+  channel?: string;
+  videoId?: string;
+  url: string;
+  duration?: string;
+  durationSeconds?: number;
+  dateHijri?: string;
+  dateGregorian?: string;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note?: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+};
+
 export type AdminStats = {
   totals: {
     series: number;
@@ -174,6 +224,36 @@ export const adminApi = {
 
   deleteSeries(id: string) {
     return request<{ ok: true; id: string }>(`/admin/series/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  listLectures(params: { search?: string; publishStatus?: string } = {}) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.publishStatus) query.set("publishStatus", params.publishStatus);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ ok: true; items: LectureItem[]; total: number }>(
+      `/admin/lectures${suffix}`,
+    );
+  },
+
+  createLecture(input: LectureInput) {
+    return request<{ ok: true; item: LectureItem }>("/admin/lectures", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateLecture(id: string, input: LectureInput) {
+    return request<{ ok: true; item: LectureItem }>(`/admin/lectures/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteLecture(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/lectures/${id}`, {
       method: "DELETE",
     });
   },

@@ -13,9 +13,9 @@ import {
   adminApi,
   ApiError,
   type Category,
-  type SeriesItem,
+  type LectureItem,
 } from "../../lib/adminApi";
-import { SeriesFormDialog } from "./SeriesFormDialog";
+import { LectureFormDialog } from "./LectureFormDialog";
 
 type Feedback = { type: "success" | "error"; message: string };
 
@@ -24,14 +24,14 @@ type Props = {
   onMutate?: () => void;
 };
 
-function publishBadgeClass(status: SeriesItem["publishStatus"]) {
+function publishBadgeClass(status: LectureItem["publishStatus"]) {
   if (status === "منشور") return "bg-green-100 text-green-800";
   if (status === "مخفي") return "bg-gray-200 text-gray-700";
   return "bg-amber-100 text-amber-800";
 }
 
-export function SeriesManager({ onMutate }: Props) {
-  const [items, setItems] = useState<SeriesItem[]>([]);
+export function LecturesManager({ onMutate }: Props) {
+  const [items, setItems] = useState<LectureItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,9 +40,9 @@ export function SeriesManager({ onMutate }: Props) {
   const [publishFilter, setPublishFilter] = useState("");
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<SeriesItem | null>(null);
+  const [editing, setEditing] = useState<LectureItem | null>(null);
 
-  const [deleteTarget, setDeleteTarget] = useState<SeriesItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<LectureItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -54,35 +54,31 @@ export function SeriesManager({ onMutate }: Props) {
     feedbackTimer.current = setTimeout(() => setFeedback(null), 4000);
   }, []);
 
-  const loadSeries = useCallback(async () => {
+  const loadLectures = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const result = await adminApi.listSeries({
+      const result = await adminApi.listLectures({
         search: search.trim() || undefined,
         publishStatus: publishFilter || undefined,
       });
       setItems(result.items);
     } catch (err) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : "تعذر تحميل السلاسل العلمية.",
+        err instanceof ApiError ? err.message : "تعذر تحميل المحاضرات.",
       );
     } finally {
       setLoading(false);
     }
   }, [search, publishFilter]);
 
-  // Debounced reload when search/filter changes.
   useEffect(() => {
     const handle = setTimeout(() => {
-      void loadSeries();
+      void loadLectures();
     }, 300);
     return () => clearTimeout(handle);
-  }, [loadSeries]);
+  }, [loadLectures]);
 
-  // Categories load once for the form dropdowns.
   useEffect(() => {
     adminApi
       .getCategories()
@@ -101,7 +97,7 @@ export function SeriesManager({ onMutate }: Props) {
     setDialogOpen(true);
   }
 
-  function openEdit(item: SeriesItem) {
+  function openEdit(item: LectureItem) {
     setEditing(item);
     setDialogOpen(true);
   }
@@ -110,7 +106,7 @@ export function SeriesManager({ onMutate }: Props) {
     setDialogOpen(false);
     setEditing(null);
     showFeedback({ type: "success", message });
-    void loadSeries();
+    void loadLectures();
     onMutate?.();
   }
 
@@ -118,16 +114,15 @@ export function SeriesManager({ onMutate }: Props) {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await adminApi.deleteSeries(deleteTarget.id);
-      showFeedback({ type: "success", message: "تم حذف السلسلة بنجاح." });
+      await adminApi.deleteLecture(deleteTarget.id);
+      showFeedback({ type: "success", message: "تم حذف المحاضرة بنجاح." });
       setDeleteTarget(null);
-      void loadSeries();
+      void loadLectures();
       onMutate?.();
     } catch (err) {
       showFeedback({
         type: "error",
-        message:
-          err instanceof ApiError ? err.message : "تعذر حذف السلسلة.",
+        message: err instanceof ApiError ? err.message : "تعذر حذف المحاضرة.",
       });
     } finally {
       setDeleting(false);
@@ -153,7 +148,7 @@ export function SeriesManager({ onMutate }: Props) {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="ابحث بالعنوان أو الكتاب أو القناة..."
+              placeholder="ابحث بالعنوان أو القناة..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-sm border border-gray-200 bg-gray-50 px-4 py-2.5 pr-11 text-sm transition-all focus:border-[var(--color-islamic-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-islamic-gold)]"
@@ -174,7 +169,7 @@ export function SeriesManager({ onMutate }: Props) {
 
           <button
             type="button"
-            onClick={() => void loadSeries()}
+            onClick={() => void loadLectures()}
             className="inline-flex items-center justify-center gap-2 rounded-sm border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
             title="تحديث"
           >
@@ -188,7 +183,7 @@ export function SeriesManager({ onMutate }: Props) {
           className="inline-flex items-center justify-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]"
         >
           <Plus className="h-4 w-4" />
-          إضافة سلسلة
+          إضافة محاضرة
         </button>
       </div>
 
@@ -203,9 +198,9 @@ export function SeriesManager({ onMutate }: Props) {
           <thead className="bg-gray-50 text-sm text-gray-500">
             <tr>
               <th className="px-5 py-3 font-bold">العنوان</th>
+              <th className="px-5 py-3 font-bold">النوع</th>
               <th className="px-5 py-3 font-bold">القناة</th>
-              <th className="px-5 py-3 font-bold">الفيديوهات</th>
-              <th className="px-5 py-3 font-bold">الاكتمال</th>
+              <th className="px-5 py-3 font-bold">المدة</th>
               <th className="px-5 py-3 font-bold">النشر</th>
               <th className="px-5 py-3 font-bold">الإجراءات</th>
             </tr>
@@ -216,7 +211,7 @@ export function SeriesManager({ onMutate }: Props) {
               <tr>
                 <td colSpan={6} className="px-5 py-12 text-center text-gray-500">
                   <Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--color-islamic-gold)]" />
-                  <p className="mt-2">جارٍ تحميل السلاسل...</p>
+                  <p className="mt-2">جارٍ تحميل المحاضرات...</p>
                 </td>
               </tr>
             ) : items.length > 0 ? (
@@ -227,9 +222,11 @@ export function SeriesManager({ onMutate }: Props) {
                 >
                   <td className="px-5 py-4">
                     <p className="font-bold text-gray-800">{item.title}</p>
-                    {item.bookTitle && (
+                    {(item.dateHijri || item.dateGregorian) && (
                       <p className="mt-1 text-xs text-gray-500">
-                        الكتاب: {item.bookTitle}
+                        {item.dateHijri || ""}
+                        {item.dateHijri && item.dateGregorian ? " — " : ""}
+                        {item.dateGregorian || ""}
                       </p>
                     )}
                     {item.tags.length > 0 && (
@@ -247,23 +244,15 @@ export function SeriesManager({ onMutate }: Props) {
                   </td>
 
                   <td className="px-5 py-4 text-sm text-gray-600">
-                    {item.channel || "—"}
+                    {item.lectureType}
                   </td>
 
                   <td className="px-5 py-4 text-sm text-gray-600">
-                    {item.videoCount}
+                    {item.channel || "—"}
                   </td>
 
-                  <td className="px-5 py-4">
-                    <span
-                      className={`inline-flex rounded-sm px-3 py-1 text-xs font-bold ${
-                        item.status === "مكتملة"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
+                  <td className="px-5 py-4 text-sm text-gray-600" dir="ltr">
+                    {item.duration || "—"}
                   </td>
 
                   <td className="px-5 py-4">
@@ -312,7 +301,7 @@ export function SeriesManager({ onMutate }: Props) {
             ) : (
               <tr>
                 <td colSpan={6} className="px-5 py-12 text-center text-gray-500">
-                  لا توجد سلاسل مطابقة. ابدأ بإضافة سلسلة جديدة.
+                  لا توجد محاضرات مطابقة. ابدأ بإضافة محاضرة جديدة.
                 </td>
               </tr>
             )}
@@ -321,7 +310,7 @@ export function SeriesManager({ onMutate }: Props) {
       </div>
 
       {dialogOpen && (
-        <SeriesFormDialog
+        <LectureFormDialog
           item={editing}
           categories={categories}
           onClose={() => setDialogOpen(false)}
@@ -347,7 +336,7 @@ export function SeriesManager({ onMutate }: Props) {
             </div>
 
             <p className="mb-6 leading-relaxed text-gray-700">
-              هل أنت متأكد من حذف السلسلة:{" "}
+              هل أنت متأكد من حذف المحاضرة:{" "}
               <span className="font-bold">{deleteTarget.title}</span>؟
             </p>
 
