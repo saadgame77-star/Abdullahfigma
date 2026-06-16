@@ -1,14 +1,16 @@
 import { createBrowserRouter } from "react-router";
 import { Layout } from "./components/Layout";
-import { Home } from "./pages/Home";
-import { Lessons } from "./pages/Lessons";
-import { Schedule } from "./pages/Schedule";
-import { Lectures } from "./pages/Lectures";
-import { Series } from "./pages/Series";
-import { Words } from "./pages/Words";
-import { Shorts } from "./pages/Shorts";
-import { Recitations } from "./pages/Recitations";
+import { AdminLogin } from "./pages/AdminLogin";
 import { Contact } from "./pages/Contact";
+import { Home } from "./pages/Home";
+import { Lectures } from "./pages/Lectures";
+import { Lessons } from "./pages/Lessons";
+import { ProtectedAdmin } from "./pages/ProtectedAdmin";
+import { Recitations } from "./pages/Recitations";
+import { Schedule } from "./pages/Schedule";
+import { Series } from "./pages/Series";
+import { Shorts } from "./pages/Shorts";
+import { Words } from "./pages/Words";
 
 export const router = createBrowserRouter(
   [
@@ -25,19 +27,21 @@ export const router = createBrowserRouter(
         { path: "shorts", Component: Shorts },
         { path: "recitations", Component: Recitations },
         { path: "contact", Component: Contact },
+        { path: "admin/login", Component: AdminLogin },
+        { path: "admin", Component: ProtectedAdmin },
         {
           path: "*",
           Component: () => (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
-              <h1 className="font-serif text-6xl font-bold text-[var(--color-islamic-green)] mb-4">
+            <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 text-center">
+              <h1 className="mb-4 font-serif text-6xl font-bold text-[var(--color-islamic-green)]">
                 404
               </h1>
-              <p className="text-xl text-gray-600 mb-8">
+              <p className="mb-8 text-xl text-gray-600">
                 عذرًا، الصفحة التي تبحث عنها غير موجودة.
               </p>
               <a
                 href="/"
-                className="bg-[var(--color-islamic-gold)] text-white px-6 py-2 rounded-sm font-bold"
+                className="rounded-sm bg-[var(--color-islamic-gold)] px-6 py-2 font-bold text-white"
               >
                 العودة للرئيسية
               </a>

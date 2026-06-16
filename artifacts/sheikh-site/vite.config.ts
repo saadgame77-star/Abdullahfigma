@@ -15,6 +15,9 @@ if (Number.isNaN(port) || port <= 0) {
 
 const basePath = process.env.BASE_PATH ?? "/";
 
+const apiProxyTarget =
+  process.env.VITE_API_PROXY_TARGET ?? "http://127.0.0.1:8081";
+
 const allowedHostsFromEnv = (
   process.env.ALLOWED_HOSTS ??
   process.env.VITE_ALLOWED_HOSTS ??
@@ -73,6 +76,13 @@ export default defineConfig({
     strictPort: true,
     host: "0.0.0.0",
     allowedHosts,
+    proxy: {
+      "/api": {
+        target: apiProxyTarget,
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     fs: {
       strict: true,
     },
