@@ -23,7 +23,9 @@ import {
   UserCog,
   Video,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { SeriesManager } from "../components/admin/SeriesManager";
+import { adminApi, type AdminStats } from "../lib/adminApi";
 import { adminSections, type AdminSection } from "../data/adminSections";
 import { adminSupervisors } from "../data/adminSupervisors";
 import { adminTags } from "../data/adminTags";
@@ -85,6 +87,22 @@ function statusClass(status: string) {
 export function Admin() {
   const [activeSection, setActiveSection] = useState<AdminSection>("overview");
   const [searchTerm, setSearchTerm] = useState("");
+  const [liveStats, setLiveStats] = useState<AdminStats | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    adminApi
+      .getStats()
+      .then((result) => {
+        if (isMounted) setLiveStats(result);
+      })
+      .catch(() => {
+        if (isMounted) setLiveStats(null);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const contentItems: ContentItem[] = useMemo(() => {
     const seriesItems: ContentItem[] = scientificSeries.map((series) => ({
@@ -161,25 +179,25 @@ export function Admin() {
   const stats = [
     {
       label: "السلاسل العلمية",
-      value: scientificSeries.length,
+      value: liveStats?.totals.series ?? scientificSeries.length,
       hint: "مكتملة وقيد الاكتمال",
       icon: ListVideo,
     },
     {
-      label: "السلاسل المكتملة",
-      value: completedSeries,
-      hint: "جاهزة للعرض المنظم",
+      label: "السلاسل المنشورة",
+      value: liveStats?.totals.seriesPublished ?? completedSeries,
+      hint: "ظاهرة على الموقع",
       icon: CheckCircle2,
     },
     {
-      label: "قيد الاكتمال",
-      value: inProgressSeries,
-      hint: "سلاسل مستمرة",
+      label: "المسودّات",
+      value: liveStats?.totals.seriesDrafts ?? inProgressSeries,
+      hint: "بانتظار المراجعة والنشر",
       icon: Clock,
     },
     {
       label: "المقاطع القصيرة",
-      value: shortClips.length,
+      value: liveStats?.totals.shortClips ?? shortClips.length,
       hint: "لا تتجاوز ثلاث دقائق",
       icon: Video,
     },
@@ -187,6 +205,8 @@ export function Admin() {
 
   function sectionCount(section: AdminSection) {
     if (section === "overview") return contentItems.length;
+    if (section === "series")
+      return liveStats?.totals.series ?? scientificSeries.length;
     if (section === "knowledge") return knowledgeCategories.length;
     if (section === "tags") return adminTags.length;
     if (section === "supervisors") return adminSupervisors.length;
@@ -312,7 +332,7 @@ export function Admin() {
                   </h2>
                 </div>
 
-                {activeSection !== "overview" && (
+                {activeSection !== "overview" && activeSection !== "series" && (
                   <button className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]">
                     <Plus className="h-4 w-4" />
                     إضافة جديد
@@ -320,7 +340,7 @@ export function Admin() {
                 )}
               </div>
 
-              {activeSection !== "overview" && (
+              {activeSection !== "overview" && activeSection !== "series" && (
                 <div className="relative">
                   <input
                     type="text"
@@ -400,7 +420,9 @@ export function Admin() {
               </section>
             )}
 
-            {["series", "shorts", "lectures", "words", "schedule"].includes(
+            {activeSection === "series" && <SeriesManager />}
+
+            {["shorts", "lectures", "words", "schedule"].includes(
               activeSection,
             ) && (
               <section className="overflow-x-auto">
