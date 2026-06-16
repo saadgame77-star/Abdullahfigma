@@ -1,12 +1,15 @@
-import { Loader2, X } from "lucide-react";
+import { Loader2, Sparkles, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import {
   adminApi,
   ApiError,
   type Category,
+  type CategorySuggestion,
   type LectureInput,
   type LectureItem,
+  type YouTubeMeta,
 } from "../../lib/adminApi";
+import { YouTubeFetch } from "./YouTubeFetch";
 
 type Props = {
   item: LectureItem | null;
@@ -72,11 +75,59 @@ export function LectureFormDialog({ item, categories, onClose, onSaved }: Props)
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState("");
 
+  const [suggestion, setSuggestion] = useState<CategorySuggestion | null>(null);
+
   const isEdit = Boolean(item);
   const selectedCategory = categories.find((c) => c.id === form.categoryId);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Fill empty fields from fetched YouTube metadata, then ask for a category.
+  function handleYouTubeFill(meta: YouTubeMeta) {
+    setForm((prev) => ({
+      ...prev,
+      title: prev.title.trim() || meta.title || prev.title,
+      channel: prev.channel.trim() || meta.channel || prev.channel,
+      videoId: prev.videoId.trim() || meta.videoId || prev.videoId,
+      duration: prev.duration.trim() || meta.duration || prev.duration,
+      dateGregorian:
+        prev.dateGregorian.trim() ||
+        (meta.publishedAt ? meta.publishedAt.slice(0, 10) : prev.dateGregorian),
+    }));
+    void requestSuggestion(meta.title ?? form.title, meta.channel ?? form.channel);
+  }
+
+  // Smart categorization: suggest a category from previously classified content.
+  async function requestSuggestion(title: string, channel: string) {
+    if (!title.trim() && !channel.trim()) return;
+    try {
+      const { suggestion: result } = await adminApi.suggestCategory({
+        title,
+        channel,
+        tags: form.tags,
+      });
+      if (!result) {
+        setSuggestion(null);
+        return;
+      }
+      setSuggestion(result);
+      // Auto-apply only when confident and the field is still empty.
+      if (result.confidence >= 60 && !form.categoryId) {
+        applySuggestion(result);
+      }
+    } catch {
+      setSuggestion(null);
+    }
+  }
+
+  function applySuggestion(result: CategorySuggestion) {
+    setForm((prev) => ({
+      ...prev,
+      categoryId: result.categoryId,
+      subcategoryId: result.subcategoryId ?? "",
+    }));
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -175,6 +226,11 @@ export function LectureFormDialog({ item, categories, onClose, onSaved }: Props)
               {errors.url && (
                 <p className="mt-1 text-xs text-red-600">{errors.url}</p>
               )}
+              <YouTubeFetch
+                url={form.url}
+                type="video"
+                onFill={handleYouTubeFill}
+              />
             </div>
 
             <div>
@@ -247,7 +303,17 @@ export function LectureFormDialog({ item, categories, onClose, onSaved }: Props)
             </div>
 
             <div>
-              <label className={labelClass}>التصنيف (باب العلم)</label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className={labelClass + " mb-0"}>التصنيف (باب العلم)</label>
+                <button
+                  type="button"
+                  onClick={() => requestSuggestion(form.title, form.channel)}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[var(--color-islamic-green)] hover:underline"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  اقتراح ذكي
+                </button>
+              </div>
               <select
                 className={fieldClass}
                 value={form.categoryId}
@@ -263,6 +329,18 @@ export function LectureFormDialog({ item, categories, onClose, onSaved }: Props)
                   </option>
                 ))}
               </select>
+              {suggestion && suggestion.categoryId !== form.categoryId && (
+                <button
+                  type="button"
+                  onClick={() => applySuggestion(suggestion)}
+                  className="mt-1 inline-flex items-center gap-1 rounded-sm bg-[var(--color-islamic-gold)]/15 px-2 py-1 text-xs text-[var(--color-islamic-green-dark)] hover:bg-[var(--color-islamic-gold)]/25"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  مقترح: {suggestion.categoryName ?? "—"}
+                  {suggestion.subcategoryName ? ` / ${suggestion.subcategoryName}` : ""}
+                  {` (ثقة ${suggestion.confidence}%) — تطبيق`}
+                </button>
+              )}
             </div>
 
             <div>

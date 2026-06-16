@@ -134,6 +134,28 @@ export type Category = {
   subcategories: Subcategory[];
 };
 
+export type YouTubeMeta = {
+  kind: "video" | "playlist";
+  videoId: string | null;
+  playlistId: string | null;
+  title: string | null;
+  channel: string | null;
+  durationSeconds: number | null;
+  duration: string | null;
+  videoCount: number | null;
+  publishedAt: string | null;
+  thumbnailUrl: string | null;
+  source: "youtube-api" | "oembed";
+};
+
+export type CategorySuggestion = {
+  categoryId: string;
+  categoryName: string | null;
+  subcategoryId: string | null;
+  subcategoryName: string | null;
+  confidence: number;
+};
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -256,5 +278,23 @@ export const adminApi = {
     return request<{ ok: true; id: string }>(`/admin/lectures/${id}`, {
       method: "DELETE",
     });
+  },
+
+  getYoutubeMeta(url: string, type?: "video" | "playlist") {
+    const query = new URLSearchParams({ url });
+    if (type) query.set("type", type);
+    return request<{ ok: true; meta: YouTubeMeta; hasApiKey: boolean }>(
+      `/admin/youtube/meta?${query.toString()}`,
+    );
+  },
+
+  suggestCategory(params: { title?: string; channel?: string; tags?: string }) {
+    const query = new URLSearchParams();
+    if (params.title) query.set("title", params.title);
+    if (params.channel) query.set("channel", params.channel);
+    if (params.tags) query.set("tags", params.tags);
+    return request<{ ok: true; suggestion: CategorySuggestion | null }>(
+      `/admin/suggest-category?${query.toString()}`,
+    );
   },
 };
