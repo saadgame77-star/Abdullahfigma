@@ -96,6 +96,90 @@ export type LectureInput = {
   subcategoryId?: string | null;
 };
 
+export type WordType = "كلمة توجيهية" | "موعظة" | "توجيه" | "فائدة دعوية";
+
+export type WordItem = {
+  id: string;
+  title: string;
+  wordType: WordType;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  channel: string | null;
+  videoId: string | null;
+  url: string;
+  duration: string | null;
+  durationSeconds: number | null;
+  dateHijri: string | null;
+  dateGregorian: string | null;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type WordInput = {
+  title: string;
+  wordType: WordType;
+  channel?: string;
+  videoId?: string;
+  url: string;
+  duration?: string;
+  durationSeconds?: number;
+  dateHijri?: string;
+  dateGregorian?: string;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note?: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+};
+
+export type ShortClipItem = {
+  id: string;
+  title: string;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  channel: string | null;
+  videoId: string | null;
+  url: string;
+  duration: string | null;
+  durationSeconds: number;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ShortClipInput = {
+  title: string;
+  channel?: string;
+  videoId?: string;
+  url: string;
+  duration?: string;
+  durationSeconds?: number;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note?: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+};
+
 export type AdminStats = {
   totals: {
     series: number;
@@ -276,6 +360,66 @@ export const adminApi = {
 
   deleteLecture(id: string) {
     return request<{ ok: true; id: string }>(`/admin/lectures/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  listWords(params: { search?: string; publishStatus?: string } = {}) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.publishStatus) query.set("publishStatus", params.publishStatus);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ ok: true; items: WordItem[]; total: number }>(
+      `/admin/words${suffix}`,
+    );
+  },
+
+  createWord(input: WordInput) {
+    return request<{ ok: true; item: WordItem }>("/admin/words", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateWord(id: string, input: WordInput) {
+    return request<{ ok: true; item: WordItem }>(`/admin/words/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteWord(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/words/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  listShorts(params: { search?: string; publishStatus?: string } = {}) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.publishStatus) query.set("publishStatus", params.publishStatus);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ ok: true; items: ShortClipItem[]; total: number }>(
+      `/admin/shorts${suffix}`,
+    );
+  },
+
+  createShort(input: ShortClipInput) {
+    return request<{ ok: true; item: ShortClipItem }>("/admin/shorts", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateShort(id: string, input: ShortClipInput) {
+    return request<{ ok: true; item: ShortClipItem }>(`/admin/shorts/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteShort(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/shorts/${id}`, {
       method: "DELETE",
     });
   },

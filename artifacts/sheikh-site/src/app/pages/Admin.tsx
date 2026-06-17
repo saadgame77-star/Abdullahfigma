@@ -26,6 +26,8 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SeriesManager } from "../components/admin/SeriesManager";
 import { LecturesManager } from "../components/admin/LecturesManager";
+import { WordsManager } from "../components/admin/WordsManager";
+import { ShortsManager } from "../components/admin/ShortsManager";
 import { adminApi, type AdminStats } from "../lib/adminApi";
 import { adminSections, type AdminSection } from "../data/adminSections";
 import { adminSupervisors } from "../data/adminSupervisors";
@@ -154,6 +156,10 @@ export function Admin() {
     adminSections.find((section) => section.key === activeSection) ??
     adminSections[0];
 
+  // Sections that render their own DB-backed manager (with their own toolbar).
+  const managedSections = ["series", "lectures", "words", "shorts"];
+  const isManagedSection = managedSections.includes(activeSection);
+
   const visibleItems = contentItems.filter((item) => {
     const isCurrentSection = item.section === activeSection;
 
@@ -208,6 +214,9 @@ export function Admin() {
       return liveStats?.totals.series ?? scientificSeries.length;
     if (section === "lectures")
       return liveStats?.totals.lectures ?? 0;
+    if (section === "words") return liveStats?.totals.words ?? 0;
+    if (section === "shorts")
+      return liveStats?.totals.shortClips ?? shortClips.length;
     if (section === "knowledge") return knowledgeCategories.length;
     if (section === "tags") return adminTags.length;
     if (section === "supervisors") return adminSupervisors.length;
@@ -333,19 +342,15 @@ export function Admin() {
                   </h2>
                 </div>
 
-                {activeSection !== "overview" &&
-                  activeSection !== "series" &&
-                  activeSection !== "lectures" && (
-                    <button className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]">
-                      <Plus className="h-4 w-4" />
-                      إضافة جديد
-                    </button>
-                  )}
+                {activeSection !== "overview" && !isManagedSection && (
+                  <button className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-green)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-islamic-green-dark)]">
+                    <Plus className="h-4 w-4" />
+                    إضافة جديد
+                  </button>
+                )}
               </div>
 
-              {activeSection !== "overview" &&
-                activeSection !== "series" &&
-                activeSection !== "lectures" && (
+              {activeSection !== "overview" && !isManagedSection && (
                 <div className="relative">
                   <input
                     type="text"
@@ -433,7 +438,15 @@ export function Admin() {
               <LecturesManager onMutate={refreshStats} />
             )}
 
-            {["shorts", "words", "schedule"].includes(activeSection) && (
+            {activeSection === "words" && (
+              <WordsManager onMutate={refreshStats} />
+            )}
+
+            {activeSection === "shorts" && (
+              <ShortsManager onMutate={refreshStats} />
+            )}
+
+            {["schedule"].includes(activeSection) && (
               <section className="overflow-x-auto">
                 <table className="w-full min-w-[820px] text-right">
                   <thead className="bg-gray-50 text-sm text-gray-500">
