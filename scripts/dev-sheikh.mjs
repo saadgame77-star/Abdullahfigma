@@ -38,6 +38,13 @@ async function killDevPatterns() {
   }
 }
 
+// Frees a TCP port by killing whatever process is listening on it, regardless
+// of its command name (more reliable than matching process patterns).
+async function killPort(port) {
+  await runShell(`fuser -k ${port}/tcp 2>/dev/null || true`);
+  await runShell(`lsof -ti tcp:${port} | xargs -r kill -9 2>/dev/null || true`);
+}
+
 function isPortFree(port) {
   return new Promise((resolve) => {
     const socket = net.connect({ host: "127.0.0.1", port });
@@ -59,6 +66,7 @@ async function waitForPortsFree(ports, timeoutMs = 15000) {
     const states = await Promise.all(ports.map(isPortFree));
     if (states.every(Boolean)) return;
     await killDevPatterns();
+    await Promise.all(ports.map(killPort));
     await new Promise((resolve) => setTimeout(resolve, 700));
   }
 }
@@ -66,6 +74,7 @@ async function waitForPortsFree(ports, timeoutMs = 15000) {
 async function stopOldProcesses() {
   console.log("إيقاف العمليات القديمة المرتبطة بموقع الشيخ والموك أب...");
   await killDevPatterns();
+  await Promise.all([API_PORT, SITE_PORT].map(killPort));
   await waitForPortsFree([API_PORT, SITE_PORT]);
 }
 
