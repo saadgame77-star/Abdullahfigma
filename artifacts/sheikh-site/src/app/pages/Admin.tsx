@@ -30,6 +30,7 @@ import { LecturesManager } from "../components/admin/LecturesManager";
 import { WordsManager } from "../components/admin/WordsManager";
 import { ShortsManager } from "../components/admin/ShortsManager";
 import { CategoriesManager } from "../components/admin/CategoriesManager";
+import { TagsManager } from "../components/admin/TagsManager";
 import { ScheduleManager } from "../components/admin/ScheduleManager";
 import { MiscManager } from "../components/admin/MiscManager";
 import { adminApi, type AdminStats } from "../lib/adminApi";
@@ -170,6 +171,7 @@ export function Admin() {
     "schedule",
     "misc",
     "knowledge",
+    "tags",
   ];
   const isManagedSection = managedSections.includes(activeSection);
 
@@ -476,22 +478,7 @@ export function Admin() {
             )}
 
             {activeSection === "tags" && (
-              <section className="p-5">
-                <div className="flex flex-wrap gap-2">
-                  {adminTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-2 rounded-sm border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
-                    >
-                      <Hash className="h-4 w-4 text-[var(--color-islamic-gold)]" />
-                      {tag}
-                      <button className="text-gray-400 hover:text-[var(--color-islamic-green)]">
-                        <Edit3 className="h-3.5 w-3.5" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </section>
+              <TagsManager onMutate={refreshStats} />
             )}
 
             {activeSection === "supervisors" && (

@@ -357,6 +357,13 @@ export type SubcategoryInput = {
   displayOrder: number;
 };
 
+export type Tag = {
+  id: string;
+  name: string;
+  slug: string;
+  usageCount: number;
+};
+
 export type YouTubeMeta = {
   kind: "video" | "playlist";
   videoId: string | null;
@@ -483,6 +490,35 @@ export const adminApi = {
       `/admin/knowledge-categories/subcategories/${subId}`,
       { method: "DELETE" },
     );
+  },
+
+  listTags(params: { search?: string } = {}) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ ok: true; items: Tag[]; total: number }>(
+      `/admin/tags${suffix}`,
+    );
+  },
+
+  createTag(input: { name: string }) {
+    return request<{ ok: true; item: Tag }>("/admin/tags", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateTag(id: string, input: { name: string }) {
+    return request<{ ok: true; item: Tag }>(`/admin/tags/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteTag(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/tags/${id}`, {
+      method: "DELETE",
+    });
   },
 
   listSeries(params: { search?: string; publishStatus?: string } = {}) {
