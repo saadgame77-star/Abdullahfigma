@@ -204,3 +204,31 @@ export function hasAdminPermission(
 ) {
   return user.isSuperAdmin || user.permissions.includes(permission);
 }
+
+// Cross-cutting publish/hide gate. Returns an Arabic error message when the
+// user may not move content INTO the given status, or null when allowed. Only
+// transitions are checked, so editing an already-published item does not
+// require the publish permission.
+export function canChangeContentStatus(
+  user: AuthenticatedAdminUser,
+  previousStatus: string | null,
+  nextStatus: string,
+): string | null {
+  if (
+    nextStatus === "منشور" &&
+    previousStatus !== "منشور" &&
+    !hasAdminPermission(user, "publishContent")
+  ) {
+    return "لا تملك صلاحية نشر المحتوى.";
+  }
+
+  if (
+    nextStatus === "مخفي" &&
+    previousStatus !== "مخفي" &&
+    !hasAdminPermission(user, "hideContent")
+  ) {
+    return "لا تملك صلاحية إخفاء المحتوى.";
+  }
+
+  return null;
+}

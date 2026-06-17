@@ -1,7 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { and, desc, eq, ilike, or, type SQL } from "drizzle-orm";
 import { db, lectures } from "@workspace/db";
-import { requireAdminSession } from "../../middleware/admin-auth";
+import { requireAdminPermission } from "../../middleware/admin-auth";
+import { canChangeContentStatus } from "../../lib/admin-auth";
 import { writeAuditLog } from "../../lib/audit";
 import { logger } from "../../lib/logger";
 import {
@@ -18,7 +19,7 @@ import {
 
 const router = Router();
 
-router.use(requireAdminSession);
+router.use(requireAdminPermission("manageLectures"));
 
 const LECTURE_TYPES = [
   "محاضرة عامة",
@@ -218,6 +219,18 @@ router.post("/", async (request: Request, response: Response) => {
       return;
     }
 
+    const denyStatus = canChangeContentStatus(
+      request.admin!.user,
+      null,
+      data.publishStatus,
+    );
+    if (denyStatus) {
+      response
+        .status(403)
+        .json({ ok: false, error: "FORBIDDEN", message: denyStatus });
+      return;
+    }
+
     const adminId = request.admin?.user.id ?? null;
     const isPublished = data.publishStatus === "منشور";
 
@@ -305,6 +318,18 @@ router.patch("/:id", async (request: Request, response: Response) => {
       return;
     }
 
+    const denyStatus = canChangeContentStatus(
+      request.admin!.user,
+      existing.publishStatus,
+      data.publishStatus,
+    );
+    if (denyStatus) {
+      response
+        .status(403)
+        .json({ ok: false, error: "FORBIDDEN", message: denyStatus });
+      return;
+    }
+
     const wasPublished = existing.publishStatus === "منشور";
     const willPublish = data.publishStatus === "منشور";
 
@@ -360,7 +385,10 @@ router.patch("/:id", async (request: Request, response: Response) => {
 });
 
 // DELETE /api/admin/lectures/:id
-router.delete("/:id", async (request: Request, response: Response) => {
+router.delete(
+  "/:id",
+  requireAdminPermission("deleteContent"),
+  async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
 

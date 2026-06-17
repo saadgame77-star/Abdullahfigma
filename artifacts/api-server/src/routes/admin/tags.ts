@@ -10,7 +10,10 @@ import {
   scheduleItems,
   miscItems,
 } from "@workspace/db";
-import { requireAdminSession } from "../../middleware/admin-auth";
+import {
+  requireAdminPermission,
+  requireAdminSession,
+} from "../../middleware/admin-auth";
 import { ensureUniqueSlug } from "../../lib/slug";
 import { writeAuditLog } from "../../lib/audit";
 import { logger } from "../../lib/logger";
@@ -25,6 +28,15 @@ import {
 const router = Router();
 
 router.use(requireAdminSession);
+
+// Reads open to any signed-in admin; writes require "manageTags".
+router.use((request, response, next) => {
+  if (request.method === "GET") {
+    next();
+    return;
+  }
+  requireAdminPermission("manageTags")(request, response, next);
+});
 
 type TagInput = { name: string };
 

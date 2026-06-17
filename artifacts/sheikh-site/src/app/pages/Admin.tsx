@@ -31,6 +31,7 @@ import { WordsManager } from "../components/admin/WordsManager";
 import { ShortsManager } from "../components/admin/ShortsManager";
 import { CategoriesManager } from "../components/admin/CategoriesManager";
 import { TagsManager } from "../components/admin/TagsManager";
+import { SupervisorsManager } from "../components/admin/SupervisorsManager";
 import { ScheduleManager } from "../components/admin/ScheduleManager";
 import { MiscManager } from "../components/admin/MiscManager";
 import { adminApi, type AdminStats } from "../lib/adminApi";
@@ -79,6 +80,25 @@ const sectionIcons = {
   settings: Settings,
 };
 
+// Permission required to see/use each section. "overview" is always visible.
+const sectionPermission: Partial<Record<AdminSection, string>> = {
+  series: "manageSeries",
+  shorts: "manageShorts",
+  lectures: "manageLectures",
+  words: "manageWords",
+  schedule: "manageSchedule",
+  misc: "manageMisc",
+  knowledge: "manageKnowledge",
+  tags: "manageTags",
+  supervisors: "manageSupervisors",
+  settings: "editSettings",
+};
+
+type CurrentAdmin = {
+  isSuperAdmin: boolean;
+  permissions: string[];
+};
+
 function statusClass(status: string) {
   if (
     status === "مسودة" ||
@@ -93,10 +113,22 @@ function statusClass(status: string) {
   return "bg-green-100 text-green-800";
 }
 
-export function Admin() {
+export function Admin({ currentUser }: { currentUser?: CurrentAdmin }) {
   const [activeSection, setActiveSection] = useState<AdminSection>("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [liveStats, setLiveStats] = useState<AdminStats | null>(null);
+
+  const canAccess = (section: AdminSection) => {
+    if (section === "overview") return true;
+    const required = sectionPermission[section];
+    if (!required) return true;
+    if (!currentUser) return true;
+    return currentUser.isSuperAdmin || currentUser.permissions.includes(required);
+  };
+
+  const visibleSections = adminSections.filter((section) =>
+    canAccess(section.key),
+  );
 
   const refreshStats = useCallback(() => {
     adminApi
@@ -172,6 +204,7 @@ export function Admin() {
     "misc",
     "knowledge",
     "tags",
+    "supervisors",
   ];
   const isManagedSection = managedSections.includes(activeSection);
 
@@ -304,7 +337,7 @@ export function Admin() {
             </div>
 
             <div className="space-y-1">
-              {adminSections.map((section) => {
+              {visibleSections.map((section) => {
                 const Icon = sectionIcons[section.key];
                 const isActive = activeSection === section.key;
 
@@ -482,74 +515,7 @@ export function Admin() {
             )}
 
             {activeSection === "supervisors" && (
-              <section className="p-5">
-                <div className="space-y-5">
-                  {adminSupervisors.map((supervisor) => (
-                    <article
-                      key={supervisor.id}
-                      className="rounded-sm border border-gray-200 p-5"
-                    >
-                      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-                            {supervisor.name}
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-500">
-                            {supervisor.email}
-                          </p>
-                        </div>
-
-                        <span
-                          className={`w-fit rounded-sm px-3 py-1 text-xs font-bold ${
-                            supervisor.status === "نشط"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {supervisor.status}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {permissionGroups.map((group) => (
-                          <div
-                            key={group.title}
-                            className="rounded-sm bg-gray-50 p-4"
-                          >
-                            <h4 className="mb-3 font-bold text-gray-700">
-                              {group.title}
-                            </h4>
-
-                            <div className="space-y-2">
-                              {group.permissions.map((permission) => {
-                                const isGranted =
-                                  supervisor.permissions.includes(
-                                    permission.key,
-                                  );
-
-                                return (
-                                  <label
-                                    key={permission.key}
-                                    className="flex items-center gap-2 text-sm text-gray-700"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isGranted}
-                                      readOnly
-                                      className="h-4 w-4 accent-[var(--color-islamic-green)]"
-                                    />
-                                    {permission.label}
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
+              <SupervisorsManager onMutate={refreshStats} />
             )}
 
             {activeSection === "settings" && (

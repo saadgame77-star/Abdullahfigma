@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { asc, eq } from "drizzle-orm";
 import { db, knowledgeCategories, knowledgeSubcategories } from "@workspace/db";
-import { requireAdminSession } from "../../middleware/admin-auth";
+import {
+  requireAdminPermission,
+  requireAdminSession,
+} from "../../middleware/admin-auth";
 import { ensureUniqueSlug } from "../../lib/slug";
 import { writeAuditLog } from "../../lib/audit";
 import { logger } from "../../lib/logger";
@@ -18,6 +21,16 @@ import {
 const router = Router();
 
 router.use(requireAdminSession);
+
+// Reads stay open to any signed-in admin (content forms need the category
+// list); writes require the "manageKnowledge" permission.
+router.use((request, response, next) => {
+  if (request.method === "GET") {
+    next();
+    return;
+  }
+  requireAdminPermission("manageKnowledge")(request, response, next);
+});
 
 const PUBLISH_STATUSES = ["منشور", "مخفي", "مسودة"] as const;
 

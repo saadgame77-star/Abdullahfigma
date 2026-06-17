@@ -1,7 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { and, desc, eq, ilike, or, type SQL } from "drizzle-orm";
 import { db, scientificSeries } from "@workspace/db";
-import { requireAdminSession } from "../../middleware/admin-auth";
+import { requireAdminPermission } from "../../middleware/admin-auth";
+import { canChangeContentStatus } from "../../lib/admin-auth";
 import { ensureUniqueSlug } from "../../lib/slug";
 import { writeAuditLog } from "../../lib/audit";
 import { logger } from "../../lib/logger";
@@ -19,7 +20,7 @@ import {
 
 const router = Router();
 
-router.use(requireAdminSession);
+router.use(requireAdminPermission("manageSeries"));
 
 const COMPLETION_STATUSES = ["مكتملة", "غير مكتملة"] as const;
 const TRUST_LEVELS = ["عالٍ", "متوسط"] as const;
@@ -199,6 +200,18 @@ router.post("/", async (request: Request, response: Response) => {
       return;
     }
 
+    const denyStatus = canChangeContentStatus(
+      request.admin!.user,
+      null,
+      data.publishStatus,
+    );
+    if (denyStatus) {
+      response
+        .status(403)
+        .json({ ok: false, error: "FORBIDDEN", message: denyStatus });
+      return;
+    }
+
     const slug = await ensureUniqueSlug({
       table: scientificSeries,
       slugColumn: scientificSeries.slug,
@@ -291,6 +304,18 @@ router.patch("/:id", async (request: Request, response: Response) => {
       return;
     }
 
+    const denyStatus = canChangeContentStatus(
+      request.admin!.user,
+      existing.publishStatus,
+      data.publishStatus,
+    );
+    if (denyStatus) {
+      response
+        .status(403)
+        .json({ ok: false, error: "FORBIDDEN", message: denyStatus });
+      return;
+    }
+
     const slug = await ensureUniqueSlug({
       table: scientificSeries,
       slugColumn: scientificSeries.slug,
@@ -354,7 +379,10 @@ router.patch("/:id", async (request: Request, response: Response) => {
 });
 
 // DELETE /api/admin/series/:id
-router.delete("/:id", async (request: Request, response: Response) => {
+router.delete(
+  "/:id",
+  requireAdminPermission("deleteContent"),
+  async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
 

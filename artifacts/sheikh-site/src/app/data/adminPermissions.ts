@@ -4,6 +4,7 @@ export type PermissionKey =
   | "manageLectures"
   | "manageWords"
   | "manageSchedule"
+  | "manageMisc"
   | "manageKnowledge"
   | "manageTags"
   | "publishContent"
@@ -29,6 +30,7 @@ export const permissionGroups: PermissionGroup[] = [
       { key: "manageLectures", label: "إدارة المحاضرات" },
       { key: "manageWords", label: "إدارة الكلمات الدعوية" },
       { key: "manageSchedule", label: "إدارة الجدول" },
+      { key: "manageMisc", label: "إدارة المتفرقات" },
     ],
   },
   {

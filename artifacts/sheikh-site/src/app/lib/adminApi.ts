@@ -364,6 +364,27 @@ export type Tag = {
   usageCount: number;
 };
 
+export type AdminUserStatus = "نشط" | "موقوف";
+
+export type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  status: AdminUserStatus;
+  isSuperAdmin: boolean;
+  permissions: string[];
+  lastLoginAt: string | null;
+  createdAt: string;
+};
+
+export type AdminUserInput = {
+  name: string;
+  email: string;
+  password?: string;
+  status: AdminUserStatus;
+  permissions: string[];
+};
+
 export type YouTubeMeta = {
   kind: "video" | "playlist";
   videoId: string | null;
@@ -517,6 +538,30 @@ export const adminApi = {
 
   deleteTag(id: string) {
     return request<{ ok: true; id: string }>(`/admin/tags/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  listUsers() {
+    return request<{ ok: true; items: AdminUser[] }>("/admin/users");
+  },
+
+  createUser(input: AdminUserInput) {
+    return request<{ ok: true; item: AdminUser }>("/admin/users", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateUser(id: string, input: AdminUserInput) {
+    return request<{ ok: true; item: AdminUser }>(`/admin/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteUser(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/users/${id}`, {
       method: "DELETE",
     });
   },

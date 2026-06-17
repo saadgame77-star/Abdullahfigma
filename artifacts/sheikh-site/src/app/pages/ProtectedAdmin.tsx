@@ -148,7 +148,7 @@ export function ProtectedAdmin() {
         </div>
       </div>
 
-      <Admin />
+      <Admin currentUser={authState.user} />
     </div>
   );
 }
