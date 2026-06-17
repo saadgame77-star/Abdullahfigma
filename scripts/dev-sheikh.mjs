@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import http from "node:http";
 import net from "node:net";
+import fs from "node:fs";
 
 const API_PORT = 8080;
 const SITE_PORT = 24740;
@@ -38,11 +39,60 @@ async function killDevPatterns() {
   }
 }
 
-// Frees a TCP port by killing whatever process is listening on it, regardless
-// of its command name (more reliable than matching process patterns).
+function listenInodesForPort(port) {
+  const target = port.toString(16).toUpperCase().padStart(4, "0");
+  const inodes = new Set();
+  for (const file of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+    let data;
+    try {
+      data = fs.readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    for (const line of data.split("\n").slice(1)) {
+      const cols = line.trim().split(/\s+/);
+      if (cols.length < 10) continue;
+      const localPort = cols[1]?.split(":")[1];
+      const state = cols[3];
+      if (localPort === target && state === "0A") inodes.add(cols[9]);
+    }
+  }
+  return inodes;
+}
+
 async function killPort(port) {
-  await runShell(`fuser -k ${port}/tcp 2>/dev/null || true`);
-  await runShell(`lsof -ti tcp:${port} | xargs -r kill -9 2>/dev/null || true`);
+  const inodes = listenInodesForPort(port);
+  if (inodes.size === 0) return;
+  let pids = [];
+  try {
+    pids = fs.readdirSync("/proc").filter((d) => /^\d+$/.test(d));
+  } catch {
+    return;
+  }
+  for (const pid of pids) {
+    if (pid === String(process.pid)) continue;
+    let fds;
+    try {
+      fds = fs.readdirSync(`/proc/${pid}/fd`);
+    } catch {
+      continue;
+    }
+    for (const fd of fds) {
+      let link;
+      try {
+        link = fs.readlinkSync(`/proc/${pid}/fd/${fd}`);
+      } catch {
+        continue;
+      }
+      const match = link.match(/^socket:\[(\d+)\]$/);
+      if (match && inodes.has(match[1])) {
+        try {
+          process.kill(Number(pid), "SIGKILL");
+        } catch {}
+        break;
+      }
+    }
+  }
 }
 
 function isPortFree(port) {
