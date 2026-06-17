@@ -5,6 +5,8 @@
 
 export type NavLink = { label: string; href: string };
 
+export type PageHeader = { badge: string; title: string; description: string };
+
 export type SiteThemeColors = {
   green: string;
   greenLight: string;
@@ -56,6 +58,34 @@ export type SiteContent = {
       };
       shorts: { eyebrow: string; heading: string };
       stats: { eyebrow: string; title: string };
+    };
+    lessons: PageHeader & { searchPlaceholder: string };
+    lectures: PageHeader & { searchPlaceholder: string };
+    words: PageHeader & { searchPlaceholder: string };
+    shorts: { title: string; searchPlaceholder: string };
+    recitations: { title: string; searchPlaceholder: string };
+    schedule: { title: string; searchPlaceholder: string };
+    contact: {
+      title: string;
+      intro: string;
+      warningTitle: string;
+      warningMessage: string;
+      channelsTitle: string;
+      channelsSubtitle: string;
+      channelsEmptyTitle: string;
+      channelsEmptyMessage: string;
+      tipsTitle: string;
+      tips: string[];
+      formTitle: string;
+      formSubtitle: string;
+      nameLabel: string;
+      emailLabel: string;
+      typeLabel: string;
+      messageLabel: string;
+      fieldPlaceholder: string;
+      messagePlaceholder: string;
+      submitLabel: string;
+      formNote: string;
     };
   };
   seo: {
@@ -140,6 +170,68 @@ export const defaultSiteContent: SiteContent = {
         eyebrow: "المحتوى في أرقام",
         title: "نظرة على ما يضمّه الموقع",
       },
+    },
+    lessons: {
+      badge: "مكتبة المشاهدة العلمية",
+      title: "الدروس العلمية",
+      description:
+        "اختر السلسلة من الأيقونات، ثم اختر الحلقة وشاهدها مباشرة داخل الصفحة دون انتقال أو نوافذ منبثقة.",
+      searchPlaceholder: "ابحث باسم السلسلة أو الكتاب أو باب العلم...",
+    },
+    lectures: {
+      badge: "مكتبة المحاضرات",
+      title: "المحاضرات العامة",
+      description:
+        "محاضرات ولقاءات علمية ودعوية لا تندرج ضمن السلاسل العلمية، تُعرض داخل الصفحة بصورة مختصرة وواضحة.",
+      searchPlaceholder: "ابحث باسم المحاضرة أو باب العلم أو التصنيف...",
+    },
+    words: {
+      badge: "مكتبة الكلمات الدعوية",
+      title: "الكلمات الدعوية",
+      description:
+        "كلمات موجزة وتوجيهات نافعة، تُعرض داخل الصفحة بفهرس مختصر ومشغل واضح عند توفر الفيديو.",
+      searchPlaceholder: "ابحث باسم الكلمة أو باب العلم أو التصنيف...",
+    },
+    shorts: {
+      title: "المقاطع القصيرة",
+      searchPlaceholder: "ابحث بعنوان المقطع أو التصنيف...",
+    },
+    recitations: {
+      title: "متفرقات",
+      searchPlaceholder: "ابحث في التلاوات والخطب والملفات...",
+    },
+    schedule: {
+      title: "جدول المحاضرات والدروس",
+      searchPlaceholder: "ابحث باسم الدرس أو الموعد...",
+    },
+    contact: {
+      title: "تواصل معنا",
+      intro:
+        "هذه الصفحة مخصصة لاستقبال الملاحظات والمقترحات المتعلقة بالموقع، وسيتم تفعيل الإرسال المباشر بعد ربط النموذج بخدمة آمنة.",
+      warningTitle: "تنبيه مهم",
+      warningMessage:
+        "نموذج التواصل غير مفعل حاليًا. سيتم تفعيل الإرسال المباشر لاحقًا بعد ربطه بخدمة آمنة من جهة الخادم، حفاظًا على الخصوصية ومنع إساءة الاستخدام.",
+      channelsTitle: "القنوات الرسمية",
+      channelsSubtitle: "الروابط المعتمدة للمتابعة والتواصل.",
+      channelsEmptyTitle: "سيتم إضافة القنوات الرسمية قريبًا",
+      channelsEmptyMessage:
+        "ستظهر هنا روابط القنوات الرسمية بعد اعتمادها، مثل قناة يوتيوب أو أي وسيلة تواصل أخرى تقررها إدارة الموقع.",
+      tipsTitle: "قبل إرسال الرسالة",
+      tips: [
+        "اكتب عنوانًا واضحًا ومختصرًا للرسالة.",
+        "إذا كانت الملاحظة فنية، اذكر رابط الصفحة أو اسم القسم.",
+        "لا تضع بيانات خاصة أو حساسة داخل نموذج التواصل.",
+      ],
+      formTitle: "نموذج الإرسال",
+      formSubtitle: "سيتم تفعيله لاحقًا بعد الربط الآمن.",
+      nameLabel: "الاسم الكريم",
+      emailLabel: "بريدك الإلكتروني",
+      typeLabel: "نوع الرسالة",
+      messageLabel: "نص الرسالة",
+      fieldPlaceholder: "سيتم تفعيل الحقل لاحقًا",
+      messagePlaceholder: "سيتم تفعيل النموذج بعد ربطه بخدمة آمنة",
+      submitLabel: "الإرسال غير مفعل حاليًا",
+      formNote: "سيتم تفعيل الإرسال المباشر لاحقًا بعد ربط النموذج بخدمة آمنة.",
     },
   },
   seo: {

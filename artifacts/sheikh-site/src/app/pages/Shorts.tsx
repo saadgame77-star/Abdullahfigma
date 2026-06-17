@@ -6,6 +6,7 @@ import {
   type ShortDisplayMode,
   type ShortFitMode,
 } from "../lib/publicApi";
+import { useSiteContent } from "../components/SiteContentProvider";
 import { usePublicData } from "../lib/usePublicData";
 
 type ShortClip = PublicShort;
@@ -134,6 +135,7 @@ function SmartPlayer({
 }
 
 export function Shorts() {
+  const page = useSiteContent().pages.shorts;
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("الكل");
   const [selectedShortId, setSelectedShortId] = useState<string | null>(null);
@@ -203,7 +205,7 @@ export function Shorts() {
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
-              المقاطع القصيرة
+              {page.title}
             </h1>
             <div className="mt-3 h-1 w-20 bg-[var(--color-islamic-gold)]" />
           </div>
@@ -212,7 +214,7 @@ export function Shorts() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="ابحث بعنوان المقطع أو التصنيف..."
+                placeholder={page.searchPlaceholder}
                 value={searchTerm}
                 onChange={(event) => {
                   setSearchTerm(event.target.value);

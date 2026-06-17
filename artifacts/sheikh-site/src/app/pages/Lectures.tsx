@@ -11,9 +11,11 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { publicApi } from "../lib/publicApi";
+import { useSiteContent } from "../components/SiteContentProvider";
 import { usePublicData } from "../lib/usePublicData";
 
 export function Lectures() {
+  const page = useSiteContent().pages.lectures;
   const [searchTerm, setSearchTerm] = useState("");
   const [activeKnowledgeArea, setActiveKnowledgeArea] = useState("الكل");
   const [activeCategory, setActiveCategory] = useState("الكل");
@@ -105,18 +107,17 @@ export function Lectures() {
           <div className="max-w-4xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-ivory)] border border-gray-200 px-4 py-2 text-sm font-bold text-[var(--color-islamic-green)] mb-5">
               <Mic2 className="w-4 h-4 text-[var(--color-islamic-gold)]" />
-              مكتبة المحاضرات
+              {page.badge}
             </span>
 
             <h1 className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5">
-              المحاضرات العامة
+              {page.title}
             </h1>
 
             <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
 
             <p className="text-gray-600 leading-relaxed text-lg">
-              محاضرات ولقاءات علمية ودعوية لا تندرج ضمن السلاسل العلمية، تُعرض
-              داخل الصفحة بصورة مختصرة وواضحة.
+              {page.description}
             </p>
           </div>
 
@@ -160,7 +161,7 @@ export function Lectures() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="ابحث باسم المحاضرة أو باب العلم أو التصنيف..."
+                placeholder={page.searchPlaceholder}
                 value={searchTerm}
                 onChange={(event) => {
                   setSearchTerm(event.target.value);

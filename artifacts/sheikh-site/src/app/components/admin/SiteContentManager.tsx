@@ -413,6 +413,248 @@ export function SiteContentManager() {
             />
           </Group>
 
+          <Group title="صفحة: الدروس العلمية">
+            <TextField
+              label="الشارة"
+              value={content.pages.lessons.badge}
+              onChange={(v) => edit((d) => (d.pages.lessons.badge = v))}
+            />
+            <TextField
+              label="العنوان"
+              value={content.pages.lessons.title}
+              onChange={(v) => edit((d) => (d.pages.lessons.title = v))}
+            />
+            <TextArea
+              label="الوصف"
+              value={content.pages.lessons.description}
+              onChange={(v) => edit((d) => (d.pages.lessons.description = v))}
+            />
+            <TextField
+              label="نص حقل البحث"
+              value={content.pages.lessons.searchPlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.lessons.searchPlaceholder = v))
+              }
+            />
+          </Group>
+
+          <Group title="صفحة: المحاضرات">
+            <TextField
+              label="الشارة"
+              value={content.pages.lectures.badge}
+              onChange={(v) => edit((d) => (d.pages.lectures.badge = v))}
+            />
+            <TextField
+              label="العنوان"
+              value={content.pages.lectures.title}
+              onChange={(v) => edit((d) => (d.pages.lectures.title = v))}
+            />
+            <TextArea
+              label="الوصف"
+              value={content.pages.lectures.description}
+              onChange={(v) => edit((d) => (d.pages.lectures.description = v))}
+            />
+            <TextField
+              label="نص حقل البحث"
+              value={content.pages.lectures.searchPlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.lectures.searchPlaceholder = v))
+              }
+            />
+          </Group>
+
+          <Group title="صفحة: الكلمات الدعوية">
+            <TextField
+              label="الشارة"
+              value={content.pages.words.badge}
+              onChange={(v) => edit((d) => (d.pages.words.badge = v))}
+            />
+            <TextField
+              label="العنوان"
+              value={content.pages.words.title}
+              onChange={(v) => edit((d) => (d.pages.words.title = v))}
+            />
+            <TextArea
+              label="الوصف"
+              value={content.pages.words.description}
+              onChange={(v) => edit((d) => (d.pages.words.description = v))}
+            />
+            <TextField
+              label="نص حقل البحث"
+              value={content.pages.words.searchPlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.words.searchPlaceholder = v))
+              }
+            />
+          </Group>
+
+          <Group title="صفحة: المقاطع القصيرة">
+            <TextField
+              label="العنوان"
+              value={content.pages.shorts.title}
+              onChange={(v) => edit((d) => (d.pages.shorts.title = v))}
+            />
+            <TextField
+              label="نص حقل البحث"
+              value={content.pages.shorts.searchPlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.shorts.searchPlaceholder = v))
+              }
+            />
+          </Group>
+
+          <Group title="صفحة: المتفرقات">
+            <TextField
+              label="العنوان"
+              value={content.pages.recitations.title}
+              onChange={(v) => edit((d) => (d.pages.recitations.title = v))}
+            />
+            <TextField
+              label="نص حقل البحث"
+              value={content.pages.recitations.searchPlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.recitations.searchPlaceholder = v))
+              }
+            />
+          </Group>
+
+          <Group title="صفحة: الجدول">
+            <TextField
+              label="العنوان"
+              value={content.pages.schedule.title}
+              onChange={(v) => edit((d) => (d.pages.schedule.title = v))}
+            />
+            <TextField
+              label="نص حقل البحث"
+              value={content.pages.schedule.searchPlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.schedule.searchPlaceholder = v))
+              }
+            />
+          </Group>
+
+          <Group title="صفحة: تواصل معنا">
+            <TextField
+              label="العنوان"
+              value={content.pages.contact.title}
+              onChange={(v) => edit((d) => (d.pages.contact.title = v))}
+            />
+            <TextArea
+              label="المقدمة"
+              value={content.pages.contact.intro}
+              onChange={(v) => edit((d) => (d.pages.contact.intro = v))}
+            />
+
+            <SubTitle>التنبيه</SubTitle>
+            <TextField
+              label="عنوان التنبيه"
+              value={content.pages.contact.warningTitle}
+              onChange={(v) => edit((d) => (d.pages.contact.warningTitle = v))}
+            />
+            <TextArea
+              label="نص التنبيه"
+              value={content.pages.contact.warningMessage}
+              onChange={(v) =>
+                edit((d) => (d.pages.contact.warningMessage = v))
+              }
+            />
+
+            <SubTitle>القنوات الرسمية</SubTitle>
+            <TextField
+              label="العنوان"
+              value={content.pages.contact.channelsTitle}
+              onChange={(v) => edit((d) => (d.pages.contact.channelsTitle = v))}
+            />
+            <TextField
+              label="العنوان الفرعي"
+              value={content.pages.contact.channelsSubtitle}
+              onChange={(v) =>
+                edit((d) => (d.pages.contact.channelsSubtitle = v))
+              }
+            />
+            <TextField
+              label="عنوان الحالة الفارغة"
+              value={content.pages.contact.channelsEmptyTitle}
+              onChange={(v) =>
+                edit((d) => (d.pages.contact.channelsEmptyTitle = v))
+              }
+            />
+            <TextArea
+              label="نص الحالة الفارغة"
+              value={content.pages.contact.channelsEmptyMessage}
+              onChange={(v) =>
+                edit((d) => (d.pages.contact.channelsEmptyMessage = v))
+              }
+            />
+
+            <SubTitle>إرشادات قبل الإرسال</SubTitle>
+            <TextField
+              label="عنوان الإرشادات"
+              value={content.pages.contact.tipsTitle}
+              onChange={(v) => edit((d) => (d.pages.contact.tipsTitle = v))}
+            />
+            <StringListEditor
+              items={content.pages.contact.tips}
+              onChange={(items) => edit((d) => (d.pages.contact.tips = items))}
+            />
+
+            <SubTitle>نموذج الإرسال</SubTitle>
+            <TextField
+              label="عنوان النموذج"
+              value={content.pages.contact.formTitle}
+              onChange={(v) => edit((d) => (d.pages.contact.formTitle = v))}
+            />
+            <TextField
+              label="العنوان الفرعي للنموذج"
+              value={content.pages.contact.formSubtitle}
+              onChange={(v) => edit((d) => (d.pages.contact.formSubtitle = v))}
+            />
+            <TextField
+              label="تسمية الاسم"
+              value={content.pages.contact.nameLabel}
+              onChange={(v) => edit((d) => (d.pages.contact.nameLabel = v))}
+            />
+            <TextField
+              label="تسمية البريد"
+              value={content.pages.contact.emailLabel}
+              onChange={(v) => edit((d) => (d.pages.contact.emailLabel = v))}
+            />
+            <TextField
+              label="تسمية نوع الرسالة"
+              value={content.pages.contact.typeLabel}
+              onChange={(v) => edit((d) => (d.pages.contact.typeLabel = v))}
+            />
+            <TextField
+              label="تسمية نص الرسالة"
+              value={content.pages.contact.messageLabel}
+              onChange={(v) => edit((d) => (d.pages.contact.messageLabel = v))}
+            />
+            <TextField
+              label="نص حقول الإدخال المعطّلة"
+              value={content.pages.contact.fieldPlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.contact.fieldPlaceholder = v))
+              }
+            />
+            <TextField
+              label="نص مربع الرسالة المعطّل"
+              value={content.pages.contact.messagePlaceholder}
+              onChange={(v) =>
+                edit((d) => (d.pages.contact.messagePlaceholder = v))
+              }
+            />
+            <TextField
+              label="زر الإرسال"
+              value={content.pages.contact.submitLabel}
+              onChange={(v) => edit((d) => (d.pages.contact.submitLabel = v))}
+            />
+            <TextArea
+              label="ملاحظة أسفل النموذج"
+              value={content.pages.contact.formNote}
+              onChange={(v) => edit((d) => (d.pages.contact.formNote = v))}
+            />
+          </Group>
+
           <Group title="التذييل">
             <TextField
               label="عنوان التذييل"
@@ -688,6 +930,46 @@ function LinkListEditor({
       >
         <Plus className="h-4 w-4" />
         إضافة رابط
+      </button>
+    </div>
+  );
+}
+
+function StringListEditor({
+  items,
+  onChange,
+}: {
+  items: string[];
+  onChange: (items: string[]) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      {items.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <input
+            className={`${inputClass} flex-1`}
+            value={item}
+            onChange={(e) =>
+              onChange(items.map((it, i) => (i === index ? e.target.value : it)))
+            }
+          />
+          <button
+            type="button"
+            onClick={() => onChange(items.filter((_, i) => i !== index))}
+            className="rounded-sm p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+            aria-label="حذف"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange([...items, "عنصر جديد"])}
+        className="inline-flex items-center gap-1.5 rounded-sm border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:border-[var(--color-islamic-gold)]"
+      >
+        <Plus className="h-4 w-4" />
+        إضافة عنصر
       </button>
     </div>
   );

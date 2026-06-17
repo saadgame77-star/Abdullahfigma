@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { publicApi, type PublicMiscItem } from "../lib/publicApi";
+import { useSiteContent } from "../components/SiteContentProvider";
 import { usePublicData } from "../lib/usePublicData";
 
 type MiscItem = PublicMiscItem;
@@ -53,6 +54,7 @@ function hasPlayableContent(item: MiscItem) {
 }
 
 export function Recitations() {
+  const page = useSiteContent().pages.recitations;
   const [searchTerm, setSearchTerm] = useState("");
   const [activeSectionSlug, setActiveSectionSlug] = useState("all");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -134,7 +136,7 @@ export function Recitations() {
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
-              متفرقات
+              {page.title}
             </h1>
             <div className="mt-3 h-1 w-20 bg-[var(--color-islamic-gold)]" />
           </div>
@@ -143,7 +145,7 @@ export function Recitations() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="ابحث في التلاوات والخطب والملفات..."
+                placeholder={page.searchPlaceholder}
                 value={searchTerm}
                 onChange={(event) => {
                   setSearchTerm(event.target.value);

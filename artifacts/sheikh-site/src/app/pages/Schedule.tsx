@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { publicApi, type PublicScheduleItem } from "../lib/publicApi";
+import { useSiteContent } from "../components/SiteContentProvider";
 import { usePublicData } from "../lib/usePublicData";
 
 const officialScheduleImageUrl = "";
@@ -56,6 +57,7 @@ function getWhenText(item: PublicScheduleItem) {
 }
 
 export function Schedule() {
+  const page = useSiteContent().pages.schedule;
   const [searchTerm, setSearchTerm] = useState("");
   const [activeKind, setActiveKind] = useState("الكل");
   const [activeStatus, setActiveStatus] = useState("الكل");
@@ -132,7 +134,7 @@ export function Schedule() {
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
-              جدول المحاضرات والدروس
+              {page.title}
             </h1>
             <div className="mt-3 h-1 w-24 bg-[var(--color-islamic-gold)]" />
           </div>
@@ -141,7 +143,7 @@ export function Schedule() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="ابحث باسم الدرس أو الموعد..."
+                placeholder={page.searchPlaceholder}
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 className="w-full rounded-sm border border-gray-200 bg-white py-3 px-4 pr-12 shadow-sm transition-all focus:border-[var(--color-islamic-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-islamic-gold)]"
