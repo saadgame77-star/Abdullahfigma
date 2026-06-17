@@ -29,6 +29,7 @@ import { SeriesManager } from "../components/admin/SeriesManager";
 import { LecturesManager } from "../components/admin/LecturesManager";
 import { WordsManager } from "../components/admin/WordsManager";
 import { ShortsManager } from "../components/admin/ShortsManager";
+import { CategoriesManager } from "../components/admin/CategoriesManager";
 import { ScheduleManager } from "../components/admin/ScheduleManager";
 import { MiscManager } from "../components/admin/MiscManager";
 import { adminApi, type AdminStats } from "../lib/adminApi";
@@ -168,6 +169,7 @@ export function Admin() {
     "shorts",
     "schedule",
     "misc",
+    "knowledge",
   ];
   const isManagedSection = managedSections.includes(activeSection);
 
@@ -470,45 +472,7 @@ export function Admin() {
             )}
 
             {activeSection === "knowledge" && (
-              <section className="p-5">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {knowledgeCategories.map((category) => (
-                    <article
-                      key={category.id}
-                      className="rounded-sm border border-gray-200 p-5"
-                    >
-                      <div className="mb-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <FolderTree className="h-5 w-5 text-[var(--color-islamic-gold)]" />
-                          <h3 className="font-serif text-xl font-bold text-[var(--color-islamic-green-dark)]">
-                            {category.name}
-                          </h3>
-                        </div>
-
-                        <div className="flex gap-1">
-                          <button className="rounded-sm p-2 text-gray-500 hover:bg-gray-100">
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          <button className="rounded-sm p-2 text-gray-500 hover:bg-red-50 hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        {category.children.map((child) => (
-                          <span
-                            key={child.id}
-                            className="rounded-sm bg-[var(--color-islamic-ivory)] px-3 py-1 text-sm text-gray-700"
-                          >
-                            {child.name}
-                          </span>
-                        ))}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
+              <CategoriesManager onMutate={refreshStats} />
             )}
 
             {activeSection === "tags" && (

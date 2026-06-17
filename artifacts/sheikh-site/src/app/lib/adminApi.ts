@@ -328,6 +328,8 @@ export type Subcategory = {
   categoryId: string;
   name: string;
   slug: string;
+  description: string | null;
+  publishStatus: PublishStatus;
   displayOrder: number;
 };
 
@@ -335,8 +337,24 @@ export type Category = {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
+  publishStatus: PublishStatus;
   displayOrder: number;
   subcategories: Subcategory[];
+};
+
+export type CategoryInput = {
+  name: string;
+  description?: string;
+  publishStatus: PublishStatus;
+  displayOrder: number;
+};
+
+export type SubcategoryInput = {
+  name: string;
+  description?: string;
+  publishStatus: PublishStatus;
+  displayOrder: number;
 };
 
 export type YouTubeMeta = {
@@ -422,6 +440,48 @@ export const adminApi = {
   getCategories() {
     return request<{ ok: true; items: Category[] }>(
       "/admin/knowledge-categories",
+    );
+  },
+
+  createCategory(input: CategoryInput) {
+    return request<{ ok: true; item: Category }>(
+      "/admin/knowledge-categories",
+      { method: "POST", body: JSON.stringify(input) },
+    );
+  },
+
+  updateCategory(id: string, input: CategoryInput) {
+    return request<{ ok: true; item: Category }>(
+      `/admin/knowledge-categories/${id}`,
+      { method: "PATCH", body: JSON.stringify(input) },
+    );
+  },
+
+  deleteCategory(id: string) {
+    return request<{ ok: true; id: string }>(
+      `/admin/knowledge-categories/${id}`,
+      { method: "DELETE" },
+    );
+  },
+
+  createSubcategory(categoryId: string, input: SubcategoryInput) {
+    return request<{ ok: true; item: Subcategory }>(
+      `/admin/knowledge-categories/${categoryId}/subcategories`,
+      { method: "POST", body: JSON.stringify(input) },
+    );
+  },
+
+  updateSubcategory(subId: string, input: SubcategoryInput) {
+    return request<{ ok: true; item: Subcategory }>(
+      `/admin/knowledge-categories/subcategories/${subId}`,
+      { method: "PATCH", body: JSON.stringify(input) },
+    );
+  },
+
+  deleteSubcategory(subId: string) {
+    return request<{ ok: true; id: string }>(
+      `/admin/knowledge-categories/subcategories/${subId}`,
+      { method: "DELETE" },
     );
   },
 
