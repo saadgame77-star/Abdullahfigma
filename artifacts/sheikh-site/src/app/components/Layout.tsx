@@ -13,6 +13,7 @@ import {
 import { useMemo, useState, type ReactNode } from "react";
 import { useSiteContent } from "./SiteContentProvider";
 import { SeoManager } from "./SeoManager";
+import { InlineText } from "./InlineText";
 
 function useTodayDates() {
   return useMemo(() => {
@@ -95,19 +96,21 @@ export function Layout() {
               </div>
 
               <div className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-3 whitespace-nowrap text-center sm:text-right">
-                <span
+                <InlineText
+                  as="span"
                   className="font-sans text-[var(--color-islamic-gold)] font-medium tracking-wider"
                   style={{ fontSize: "clamp(0.65rem, 2.2vw, 1rem)" }}
-                >
-                  {content.brand.siteSubtitle}
-                </span>
+                  path="brand.siteSubtitle"
+                  value={content.brand.siteSubtitle}
+                />
 
-                <h1
+                <InlineText
+                  as="h1"
                   className="font-serif font-bold tracking-wide text-white"
                   style={{ fontSize: "clamp(1rem, 5vw, 2.25rem)" }}
-                >
-                  {content.brand.siteTitle}
-                </h1>
+                  path="brand.siteTitle"
+                  value={content.brand.siteTitle}
+                />
               </div>
             </Link>
 
@@ -228,14 +231,20 @@ export function Layout() {
                   )}
                 </div>
 
-                <h2 className="font-serif text-2xl text-white">
-                  {content.footer.title}
-                </h2>
+                <InlineText
+                  as="h2"
+                  className="font-serif text-2xl text-white"
+                  path="footer.title"
+                  value={content.footer.title}
+                />
               </div>
 
-              <p className="leading-relaxed text-sm opacity-80 max-w-sm">
-                {content.footer.description}
-              </p>
+              <InlineText
+                as="p"
+                className="leading-relaxed text-sm opacity-80 max-w-sm"
+                path="footer.description"
+                value={content.footer.description}
+              />
             </div>
 
             <div>
@@ -280,9 +289,12 @@ export function Layout() {
             <p>{content.footer.copyright.replace("{year}", String(year))}</p>
 
             <div className="mt-4 md:mt-0">
-              <span className="font-serif text-[var(--color-islamic-gold)]">
-                {content.footer.quote}
-              </span>
+              <InlineText
+                as="span"
+                className="font-serif text-[var(--color-islamic-gold)]"
+                path="footer.quote"
+                value={content.footer.quote}
+              />
             </div>
           </div>
         </div>

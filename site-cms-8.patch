@@ -1,0 +1,162 @@
+diff --git a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+index 8b032d5..0957233 100644
+--- a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
++++ b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+@@ -433,6 +433,58 @@ export function SiteContentManager() {
+               value={content.pages.home.stats.title}
+               onChange={(v) => edit((d) => (d.pages.home.stats.title = v))}
+             />
++            <TextField
++              label="تسمية: السلاسل"
++              value={content.pages.home.statsLabels.series}
++              onChange={(v) =>
++                edit((d) => (d.pages.home.statsLabels.series = v))
++              }
++            />
++            <TextField
++              label="تسمية: الدروس/الحلقات"
++              value={content.pages.home.statsLabels.episodes}
++              onChange={(v) =>
++                edit((d) => (d.pages.home.statsLabels.episodes = v))
++              }
++            />
++            <TextField
++              label="تسمية: المقاطع"
++              value={content.pages.home.statsLabels.shorts}
++              onChange={(v) =>
++                edit((d) => (d.pages.home.statsLabels.shorts = v))
++              }
++            />
++            <TextField
++              label="تسمية: أبواب العلم"
++              value={content.pages.home.statsLabels.areas}
++              onChange={(v) => edit((d) => (d.pages.home.statsLabels.areas = v))}
++            />
++
++            <SubTitle>بطاقة النشاط القادم</SubTitle>
++            <TextField
++              label="العنوان (الشارة)"
++              value={content.pages.home.upcoming.label}
++              onChange={(v) => edit((d) => (d.pages.home.upcoming.label = v))}
++            />
++            <TextField
++              label="نص الرابط"
++              value={content.pages.home.upcoming.link}
++              onChange={(v) => edit((d) => (d.pages.home.upcoming.link = v))}
++            />
++            <TextField
++              label="عنوان الحالة الفارغة"
++              value={content.pages.home.upcoming.emptyTitle}
++              onChange={(v) =>
++                edit((d) => (d.pages.home.upcoming.emptyTitle = v))
++              }
++            />
++            <TextArea
++              label="نص الحالة الفارغة"
++              value={content.pages.home.upcoming.emptyMessage}
++              onChange={(v) =>
++                edit((d) => (d.pages.home.upcoming.emptyMessage = v))
++              }
++            />
+ 
+             <SubTitle>ترتيب وإظهار الأقسام</SubTitle>
+             <HomeSectionsEditor
+diff --git a/artifacts/sheikh-site/src/app/data/siteContent.ts b/artifacts/sheikh-site/src/app/data/siteContent.ts
+index 6a4cc94..67a3da1 100644
+--- a/artifacts/sheikh-site/src/app/data/siteContent.ts
++++ b/artifacts/sheikh-site/src/app/data/siteContent.ts
+@@ -82,6 +82,18 @@ export type SiteContent = {
+       };
+       shorts: { eyebrow: string; heading: string };
+       stats: { eyebrow: string; title: string };
++      statsLabels: {
++        series: string;
++        episodes: string;
++        shorts: string;
++        areas: string;
++      };
++      upcoming: {
++        label: string;
++        link: string;
++        emptyTitle: string;
++        emptyMessage: string;
++      };
+       sections: HomeSection[];
+     };
+     lessons: PageHeader & { searchPlaceholder: string };
+@@ -204,6 +216,18 @@ export const defaultSiteContent: SiteContent = {
+         eyebrow: "المحتوى في أرقام",
+         title: "نظرة على ما يضمّه الموقع",
+       },
++      statsLabels: {
++        series: "سلسلة علمية",
++        episodes: "درس وحلقة",
++        shorts: "مقطع قصير",
++        areas: "باب علم",
++      },
++      upcoming: {
++        label: "النشاط القادم",
++        link: "عرض الجدول",
++        emptyTitle: "لا يوجد نشاط قادم منشور حاليًا",
++        emptyMessage: "سيظهر هنا أقرب موعد عند نشره في جدول المحاضرات والدروس.",
++      },
+       sections: [
+         { key: "latest", visible: true },
+         { key: "shorts", visible: true },
+diff --git a/artifacts/sheikh-site/src/app/pages/Home.tsx b/artifacts/sheikh-site/src/app/pages/Home.tsx
+index bcec337..e4c7f6a 100644
+--- a/artifacts/sheikh-site/src/app/pages/Home.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Home.tsx
+@@ -217,7 +217,15 @@ export function Home() {
+   const leadItem = teachings[0] ?? null;
+   const sideItems = teachings.slice(1, 4);
+ 
+-  const stats = getStats(scientificSeries, lectures, words, shortClips);
++  const statsLabelOrder = [
++    home.statsLabels.series,
++    home.statsLabels.episodes,
++    home.statsLabels.shorts,
++    home.statsLabels.areas,
++  ];
++  const stats = getStats(scientificSeries, lectures, words, shortClips).map(
++    (stat, index) => ({ ...stat, label: statsLabelOrder[index] ?? stat.label }),
++  );
+   const upcomingActivity = getUpcomingActivity(scheduleItems);
+ 
+   const featuredShorts = shortClips
+@@ -280,7 +288,7 @@ export function Home() {
+                   <div className="mb-4 flex items-center justify-between gap-4">
+                     <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-islamic-ivory)] px-3 py-1 text-xs font-bold text-[var(--color-islamic-green-dark)]">
+                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-islamic-gold)]" />
+-                      النشاط القادم
++                      {home.upcoming.label}
+                     </span>
+ 
+                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm bg-[var(--color-islamic-green-dark)] text-[var(--color-islamic-gold)]">
+@@ -318,22 +326,22 @@ export function Home() {
+                   </div>
+ 
+                   <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--color-islamic-green-dark)]">
+-                    عرض الجدول
++                    {home.upcoming.link}
+                     <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                   </span>
+                 </Link>
+               ) : (
+                 <div className="rounded-sm border border-gray-200 bg-white p-5 text-right shadow-sm">
+                   <p className="mb-2 text-sm font-bold text-[var(--color-islamic-gold)]">
+-                    النشاط القادم
++                    {home.upcoming.label}
+                   </p>
+ 
+                   <h2 className="font-serif text-xl font-bold text-[var(--color-islamic-green-dark)]">
+-                    لا يوجد نشاط قادم منشور حاليًا
++                    {home.upcoming.emptyTitle}
+                   </h2>
+ 
+                   <p className="mt-2 text-sm leading-relaxed text-gray-600">
+-                    سيظهر هنا أقرب موعد عند نشره في جدول المحاضرات والدروس.
++                    {home.upcoming.emptyMessage}
+                   </p>
+                 </div>
+               )}

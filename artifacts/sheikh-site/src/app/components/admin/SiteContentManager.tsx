@@ -61,6 +61,19 @@ const SEO_PAGES: { key: SeoPageKey; label: string }[] = [
   { key: "contact", label: "تواصل معنا" },
 ];
 
+// Sets a nested value on the draft document by dot-path (e.g.
+// "pages.home.hero.title"). Used by click-to-edit messages from the preview.
+function setByPath(obj: unknown, path: string, value: string) {
+  const keys = path.split(".");
+  let cursor = obj as Record<string, unknown>;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const next = cursor[keys[i]];
+    if (typeof next !== "object" || next === null) return;
+    cursor = next as Record<string, unknown>;
+  }
+  cursor[keys[keys.length - 1]] = value;
+}
+
 export function SiteContentManager() {
   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
   const [loading, setLoading] = useState(true);
@@ -142,6 +155,29 @@ export function SiteContentManager() {
     },
     [pushPreview],
   );
+
+  // Receive click-to-edit changes from the preview iframe and apply them to
+  // the draft at the reported content path.
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      const data = event.data as {
+        type?: string;
+        path?: string;
+        value?: string;
+      };
+      if (
+        data?.type === "site-content-inline-edit" &&
+        typeof data.path === "string" &&
+        typeof data.value === "string"
+      ) {
+        const path = data.path;
+        const value = data.value;
+        edit((draft) => setByPath(draft, path, value));
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [edit]);
 
   async function handleSave() {
     setSaving(true);
@@ -432,6 +468,58 @@ export function SiteContentManager() {
               label="العنوان"
               value={content.pages.home.stats.title}
               onChange={(v) => edit((d) => (d.pages.home.stats.title = v))}
+            />
+            <TextField
+              label="تسمية: السلاسل"
+              value={content.pages.home.statsLabels.series}
+              onChange={(v) =>
+                edit((d) => (d.pages.home.statsLabels.series = v))
+              }
+            />
+            <TextField
+              label="تسمية: الدروس/الحلقات"
+              value={content.pages.home.statsLabels.episodes}
+              onChange={(v) =>
+                edit((d) => (d.pages.home.statsLabels.episodes = v))
+              }
+            />
+            <TextField
+              label="تسمية: المقاطع"
+              value={content.pages.home.statsLabels.shorts}
+              onChange={(v) =>
+                edit((d) => (d.pages.home.statsLabels.shorts = v))
+              }
+            />
+            <TextField
+              label="تسمية: أبواب العلم"
+              value={content.pages.home.statsLabels.areas}
+              onChange={(v) => edit((d) => (d.pages.home.statsLabels.areas = v))}
+            />
+
+            <SubTitle>بطاقة النشاط القادم</SubTitle>
+            <TextField
+              label="العنوان (الشارة)"
+              value={content.pages.home.upcoming.label}
+              onChange={(v) => edit((d) => (d.pages.home.upcoming.label = v))}
+            />
+            <TextField
+              label="نص الرابط"
+              value={content.pages.home.upcoming.link}
+              onChange={(v) => edit((d) => (d.pages.home.upcoming.link = v))}
+            />
+            <TextField
+              label="عنوان الحالة الفارغة"
+              value={content.pages.home.upcoming.emptyTitle}
+              onChange={(v) =>
+                edit((d) => (d.pages.home.upcoming.emptyTitle = v))
+              }
+            />
+            <TextArea
+              label="نص الحالة الفارغة"
+              value={content.pages.home.upcoming.emptyMessage}
+              onChange={(v) =>
+                edit((d) => (d.pages.home.upcoming.emptyMessage = v))
+              }
             />
 
             <SubTitle>ترتيب وإظهار الأقسام</SubTitle>
@@ -792,7 +880,7 @@ export function SiteContentManager() {
         <div className="xl:sticky xl:top-4 xl:self-start">
           <div className="mb-2 flex items-center justify-between">
             <span className="inline-flex items-center gap-2 text-sm font-bold text-gray-700">
-              <Eye className="h-4 w-4" /> معاينة حيّة
+              <Eye className="h-4 w-4" /> معاينة حيّة — انقر النص لتحريره
             </span>
             <button
               type="button"

@@ -82,6 +82,18 @@ export type SiteContent = {
       };
       shorts: { eyebrow: string; heading: string };
       stats: { eyebrow: string; title: string };
+      statsLabels: {
+        series: string;
+        episodes: string;
+        shorts: string;
+        areas: string;
+      };
+      upcoming: {
+        label: string;
+        link: string;
+        emptyTitle: string;
+        emptyMessage: string;
+      };
       sections: HomeSection[];
     };
     lessons: PageHeader & { searchPlaceholder: string };
@@ -203,6 +215,18 @@ export const defaultSiteContent: SiteContent = {
       stats: {
         eyebrow: "المحتوى في أرقام",
         title: "نظرة على ما يضمّه الموقع",
+      },
+      statsLabels: {
+        series: "سلسلة علمية",
+        episodes: "درس وحلقة",
+        shorts: "مقطع قصير",
+        areas: "باب علم",
+      },
+      upcoming: {
+        label: "النشاط القادم",
+        link: "عرض الجدول",
+        emptyTitle: "لا يوجد نشاط قادم منشور حاليًا",
+        emptyMessage: "سيظهر هنا أقرب موعد عند نشره في جدول المحاضرات والدروس.",
       },
       sections: [
         { key: "latest", visible: true },

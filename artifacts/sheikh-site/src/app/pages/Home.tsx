@@ -18,6 +18,7 @@ import {
 } from "../lib/publicApi";
 import { usePublicData } from "../lib/usePublicData";
 import { useSiteContent } from "../components/SiteContentProvider";
+import { InlineText } from "../components/InlineText";
 
 type ContentType = "سلسلة" | "محاضرة" | "كلمة";
 
@@ -217,7 +218,15 @@ export function Home() {
   const leadItem = teachings[0] ?? null;
   const sideItems = teachings.slice(1, 4);
 
-  const stats = getStats(scientificSeries, lectures, words, shortClips);
+  const statsLabelOrder = [
+    home.statsLabels.series,
+    home.statsLabels.episodes,
+    home.statsLabels.shorts,
+    home.statsLabels.areas,
+  ];
+  const stats = getStats(scientificSeries, lectures, words, shortClips).map(
+    (stat, index) => ({ ...stat, label: statsLabelOrder[index] ?? stat.label }),
+  );
   const upcomingActivity = getUpcomingActivity(scheduleItems);
 
   const featuredShorts = shortClips
@@ -257,18 +266,32 @@ export function Home() {
             <div className="text-right">
               <p className="mb-4 inline-flex items-center gap-2 text-sm font-bold tracking-wide text-[var(--color-islamic-gold)]">
                 <span className="h-px w-8 bg-[var(--color-islamic-gold)]" />
-                {home.hero.eyebrow}
+                <InlineText
+                  path="pages.home.hero.eyebrow"
+                  value={home.hero.eyebrow}
+                />
               </p>
 
               <h1 className="mb-5 font-serif text-3xl font-bold leading-[1.4] text-[var(--color-islamic-green-dark)] sm:text-4xl md:text-[2.45rem]">
-                {home.hero.titleLine1}
+                <InlineText
+                  as="span"
+                  path="pages.home.hero.titleLine1"
+                  value={home.hero.titleLine1}
+                />
                 <br />
-                {home.hero.titleLine2}
+                <InlineText
+                  as="span"
+                  path="pages.home.hero.titleLine2"
+                  value={home.hero.titleLine2}
+                />
               </h1>
 
-              <p className="max-w-2xl text-base leading-loose text-gray-600 sm:text-lg">
-                {home.hero.subtitle}
-              </p>
+              <InlineText
+                as="p"
+                className="max-w-2xl text-base leading-loose text-gray-600 sm:text-lg"
+                path="pages.home.hero.subtitle"
+                value={home.hero.subtitle}
+              />
             </div>
 
             <div className="lg:pr-4">
@@ -280,7 +303,7 @@ export function Home() {
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-islamic-ivory)] px-3 py-1 text-xs font-bold text-[var(--color-islamic-green-dark)]">
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-islamic-gold)]" />
-                      النشاط القادم
+                      {home.upcoming.label}
                     </span>
 
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm bg-[var(--color-islamic-green-dark)] text-[var(--color-islamic-gold)]">
@@ -318,22 +341,22 @@ export function Home() {
                   </div>
 
                   <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--color-islamic-green-dark)]">
-                    عرض الجدول
+                    {home.upcoming.link}
                     <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
                   </span>
                 </Link>
               ) : (
                 <div className="rounded-sm border border-gray-200 bg-white p-5 text-right shadow-sm">
                   <p className="mb-2 text-sm font-bold text-[var(--color-islamic-gold)]">
-                    النشاط القادم
+                    {home.upcoming.label}
                   </p>
 
                   <h2 className="font-serif text-xl font-bold text-[var(--color-islamic-green-dark)]">
-                    لا يوجد نشاط قادم منشور حاليًا
+                    {home.upcoming.emptyTitle}
                   </h2>
 
                   <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                    سيظهر هنا أقرب موعد عند نشره في جدول المحاضرات والدروس.
+                    {home.upcoming.emptyMessage}
                   </p>
                 </div>
               )}

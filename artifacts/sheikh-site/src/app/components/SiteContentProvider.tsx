@@ -74,6 +74,21 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
     };
   }, [isPreview]);
 
+  // In preview mode, highlight click-to-edit text regions.
+  useEffect(() => {
+    if (!isPreview || typeof document === "undefined") return;
+    const style = document.createElement("style");
+    style.textContent = `
+      [data-edit-path] { cursor: text; transition: outline 0.15s, background 0.15s; border-radius: 2px; }
+      [data-edit-path]:hover { outline: 2px dashed var(--color-islamic-gold, #c5a059); outline-offset: 2px; background: rgba(197,160,89,0.08); }
+      [data-edit-path]:focus { outline: 2px solid var(--color-islamic-gold, #c5a059); outline-offset: 2px; background: rgba(197,160,89,0.12); }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      style.remove();
+    };
+  }, [isPreview]);
+
   // In preview mode, accept live updates pushed by the editor (no reload).
   useEffect(() => {
     if (!isPreview || typeof window === "undefined") return;
