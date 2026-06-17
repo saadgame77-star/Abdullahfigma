@@ -1,11 +1,14 @@
 import { Clock, Play, Search, Video, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
-  shortClips,
-  type ShortClip,
+  publicApi,
+  type PublicShort,
   type ShortDisplayMode,
   type ShortFitMode,
-} from "../data/shortClips";
+} from "../lib/publicApi";
+import { usePublicData } from "../lib/usePublicData";
+
+type ShortClip = PublicShort;
 
 const SHORTS_MAX_DURATION_SECONDS = 180;
 
@@ -133,8 +136,11 @@ function SmartPlayer({
 export function Shorts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("الكل");
-  const [selectedShortId, setSelectedShortId] = useState<number | null>(null);
+  const [selectedShortId, setSelectedShortId] = useState<string | null>(null);
   const [autoplay, setAutoplay] = useState(false);
+
+  const { data, loading, error } = usePublicData(publicApi.getShorts);
+  const shortClips = data?.items ?? [];
 
   const visibleShorts = useMemo(() => {
     return shortClips.filter(
@@ -142,7 +148,7 @@ export function Shorts() {
         clip.publishStatus === "منشور" &&
         clip.durationSeconds <= SHORTS_MAX_DURATION_SECONDS,
     );
-  }, []);
+  }, [shortClips]);
 
   const categories = useMemo(
     () => [
@@ -186,7 +192,7 @@ export function Shorts() {
     setAutoplay(false);
   }
 
-  function selectShort(clipId: number) {
+  function selectShort(clipId: string) {
     setSelectedShortId(clipId);
     setAutoplay(true);
   }
@@ -241,7 +247,15 @@ export function Shorts() {
           ))}
         </div>
 
-        {selectedShort ? (
+        {loading ? (
+          <div className="rounded-sm border border-gray-200 bg-white p-10 text-center text-gray-500">
+            جارٍ تحميل المقاطع...
+          </div>
+        ) : error ? (
+          <div className="rounded-sm border border-red-100 bg-red-50 p-10 text-center text-red-700">
+            تعذر تحميل المقاطع. حاول تحديث الصفحة.
+          </div>
+        ) : selectedShort ? (
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_360px]">
             <main className="overflow-hidden rounded-sm border border-gray-200 bg-white shadow-sm">
               <div className="bg-[var(--color-islamic-green-dark)] px-5 py-4 text-white">

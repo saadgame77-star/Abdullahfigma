@@ -10,22 +10,30 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { getAllKnowledgeAreaNames } from "../data/knowledgeCategories";
-import { words } from "../data/words";
+import { publicApi } from "../lib/publicApi";
+import { usePublicData } from "../lib/usePublicData";
 
 export function Words() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeKnowledgeArea, setActiveKnowledgeArea] = useState("الكل");
   const [activeCategory, setActiveCategory] = useState("الكل");
-  const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
+  const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
+
+  const { data, loading, error } = usePublicData(publicApi.getWords);
+  const words = data?.items ?? [];
 
   const visibleWords = useMemo(() => {
     return words.filter((word) => word.publishStatus === "منشور");
-  }, []);
+  }, [words]);
 
   const knowledgeAreas = useMemo(() => {
-    return ["الكل", ...getAllKnowledgeAreaNames()];
-  }, []);
+    return [
+      "الكل",
+      ...Array.from(
+        new Set(visibleWords.map((word) => word.knowledgeArea).filter(Boolean)),
+      ),
+    ];
+  }, [visibleWords]);
 
   const categories = useMemo(() => {
     return [
@@ -221,7 +229,15 @@ export function Words() {
           </div>
         </div>
 
-        {selectedWord ? (
+        {loading ? (
+          <div className="bg-white border border-gray-200 rounded-sm p-10 text-center text-gray-500">
+            جارٍ تحميل الكلمات...
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-100 rounded-sm p-10 text-center text-red-700">
+            تعذر تحميل الكلمات. حاول تحديث الصفحة.
+          </div>
+        ) : selectedWord ? (
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6 items-start">
             <main className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
               <div className="aspect-video bg-black">

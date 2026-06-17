@@ -10,25 +10,35 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { getAllKnowledgeAreaNames } from "../data/knowledgeCategories";
-import { scientificSeries } from "../data/scientificSeries";
+import { publicApi } from "../lib/publicApi";
+import { usePublicData } from "../lib/usePublicData";
 
 export function Lessons() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeKnowledgeArea, setActiveKnowledgeArea] = useState("الكل");
   const [activeStatus, setActiveStatus] = useState("الكل");
-  const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+
+  const { data, loading, error } = usePublicData(publicApi.getSeries);
+  const scientificSeries = data?.items ?? [];
 
   const visibleSeries = useMemo(() => {
     return scientificSeries.filter(
       (series) => series.publishStatus === "منشور",
     );
-  }, []);
+  }, [scientificSeries]);
 
   const knowledgeAreas = useMemo(() => {
-    return ["الكل", ...getAllKnowledgeAreaNames()];
-  }, []);
+    return [
+      "الكل",
+      ...Array.from(
+        new Set(
+          visibleSeries.map((series) => series.knowledgeArea).filter(Boolean),
+        ),
+      ),
+    ];
+  }, [visibleSeries]);
 
   const statuses = ["الكل", "مكتملة", "قيد الاكتمال"];
 
@@ -93,7 +103,7 @@ export function Lessons() {
     setSelectedVideoId(null);
   }
 
-  function selectSeries(seriesId: number) {
+  function selectSeries(seriesId: string) {
     setSelectedSeriesId(seriesId);
     setSelectedVideoId(null);
   }
@@ -269,7 +279,15 @@ export function Lessons() {
           </div>
         </div>
 
-        {selectedSeries ? (
+        {loading ? (
+          <div className="bg-white border border-gray-200 rounded-sm p-10 text-center text-gray-500">
+            جارٍ تحميل السلاسل...
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-100 rounded-sm p-10 text-center text-red-700">
+            تعذر تحميل السلاسل. حاول تحديث الصفحة.
+          </div>
+        ) : selectedSeries ? (
           <div className="space-y-6">
             <div className="bg-white border border-gray-200 rounded-sm shadow-sm p-4">
               <div className="flex items-center justify-between gap-4 mb-4">

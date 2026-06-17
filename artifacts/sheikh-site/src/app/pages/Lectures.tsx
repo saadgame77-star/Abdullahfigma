@@ -10,24 +10,36 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { getAllKnowledgeAreaNames } from "../data/knowledgeCategories";
-import { lectures } from "../data/lectures";
+import { publicApi } from "../lib/publicApi";
+import { usePublicData } from "../lib/usePublicData";
 
 export function Lectures() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeKnowledgeArea, setActiveKnowledgeArea] = useState("الكل");
   const [activeCategory, setActiveCategory] = useState("الكل");
-  const [selectedLectureId, setSelectedLectureId] = useState<number | null>(
+  const [selectedLectureId, setSelectedLectureId] = useState<string | null>(
     null,
   );
 
+  const { data, loading, error } = usePublicData(publicApi.getLectures);
+  const lectures = data?.items ?? [];
+
   const visibleLectures = useMemo(() => {
     return lectures.filter((lecture) => lecture.publishStatus === "منشور");
-  }, []);
+  }, [lectures]);
 
   const knowledgeAreas = useMemo(() => {
-    return ["الكل", ...getAllKnowledgeAreaNames()];
-  }, []);
+    return [
+      "الكل",
+      ...Array.from(
+        new Set(
+          visibleLectures
+            .map((lecture) => lecture.knowledgeArea)
+            .filter(Boolean),
+        ),
+      ),
+    ];
+  }, [visibleLectures]);
 
   const categories = useMemo(() => {
     return [
@@ -226,7 +238,15 @@ export function Lectures() {
           </div>
         </div>
 
-        {selectedLecture ? (
+        {loading ? (
+          <div className="bg-white border border-gray-200 rounded-sm p-10 text-center text-gray-500">
+            جارٍ تحميل المحاضرات...
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-100 rounded-sm p-10 text-center text-red-700">
+            تعذر تحميل المحاضرات. حاول تحديث الصفحة.
+          </div>
+        ) : selectedLecture ? (
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6 items-start">
             <main className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
               <div className="aspect-video bg-black">

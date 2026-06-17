@@ -12,7 +12,8 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { scheduleItems } from "../data/scheduleItems";
+import { publicApi, type PublicScheduleItem } from "../lib/publicApi";
+import { usePublicData } from "../lib/usePublicData";
 
 const officialScheduleImageUrl = "";
 
@@ -40,7 +41,7 @@ function kindClass(kind: string) {
   return "bg-[var(--color-islamic-ivory)] text-[var(--color-islamic-green-dark)] border-gray-200";
 }
 
-function getWhenText(item: (typeof scheduleItems)[number]) {
+function getWhenText(item: PublicScheduleItem) {
   const parts = [item.day, item.time].filter(Boolean);
 
   if (parts.length > 0) {
@@ -59,9 +60,12 @@ export function Schedule() {
   const [activeKind, setActiveKind] = useState("الكل");
   const [activeStatus, setActiveStatus] = useState("الكل");
 
+  const { data, loading, error } = usePublicData(publicApi.getSchedule);
+  const scheduleItems = data?.items ?? [];
+
   const visibleScheduleItems = useMemo(() => {
     return scheduleItems.filter((item) => item.publishStatus === "منشور");
-  }, []);
+  }, [scheduleItems]);
 
   const kinds = useMemo(() => {
     return [
@@ -183,7 +187,15 @@ export function Schedule() {
           </div>
         </div>
 
-        {featuredItem ? (
+        {loading ? (
+          <div className="rounded-sm border border-gray-200 bg-white p-10 text-center text-gray-500">
+            جارٍ تحميل الجدول...
+          </div>
+        ) : error ? (
+          <div className="rounded-sm border border-red-100 bg-red-50 p-10 text-center text-red-700">
+            تعذر تحميل الجدول. حاول تحديث الصفحة.
+          </div>
+        ) : featuredItem ? (
           <div className="space-y-8">
             <section className="overflow-hidden rounded-sm border border-gray-200 bg-white shadow-sm">
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px]">

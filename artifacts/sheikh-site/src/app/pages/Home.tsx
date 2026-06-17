@@ -8,11 +8,15 @@ import {
   MessageSquare,
   PlayCircle,
 } from "lucide-react";
-import { scientificSeries } from "../data/scientificSeries";
-import { lectures } from "../data/lectures";
-import { words } from "../data/words";
-import { shortClips } from "../data/shortClips";
-import { scheduleItems } from "../data/scheduleItems";
+import {
+  publicApi,
+  type PublicLecture,
+  type PublicScheduleItem,
+  type PublicSeries,
+  type PublicShort,
+  type PublicWord,
+} from "../lib/publicApi";
+import { usePublicData } from "../lib/usePublicData";
 
 type ContentType = "سلسلة" | "محاضرة" | "كلمة";
 
@@ -44,7 +48,11 @@ function getShortThumbnail(videoId: string) {
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
-function getPublishedTeachings(): UnifiedItem[] {
+function getPublishedTeachings(
+  scientificSeries: PublicSeries[],
+  lectures: PublicLecture[],
+  words: PublicWord[],
+): UnifiedItem[] {
   const seriesItems: UnifiedItem[] = scientificSeries
     .filter((series) => series.publishStatus === "منشور")
     .map((series) => ({
@@ -92,7 +100,7 @@ function getPublishedTeachings(): UnifiedItem[] {
   );
 }
 
-function getUpcomingActivity() {
+function getUpcomingActivity(scheduleItems: PublicScheduleItem[]) {
   const publishedItems = scheduleItems
     .filter(
       (item) =>
@@ -104,7 +112,12 @@ function getUpcomingActivity() {
   return publishedItems[0] ?? null;
 }
 
-function getStats() {
+function getStats(
+  scientificSeries: PublicSeries[],
+  lectures: PublicLecture[],
+  words: PublicWord[],
+  shortClips: PublicShort[],
+) {
   const publishedSeries = scientificSeries.filter(
     (series) => series.publishStatus === "منشور",
   );
@@ -185,13 +198,25 @@ function SectionHeading({ eyebrow, title, to }: SectionHeadingProps) {
 }
 
 export function Home() {
-  const teachings = getPublishedTeachings();
+  const seriesData = usePublicData(publicApi.getSeries);
+  const lecturesData = usePublicData(publicApi.getLectures);
+  const wordsData = usePublicData(publicApi.getWords);
+  const shortsData = usePublicData(publicApi.getShorts);
+  const scheduleData = usePublicData(publicApi.getSchedule);
+
+  const scientificSeries = seriesData.data?.items ?? [];
+  const lectures = lecturesData.data?.items ?? [];
+  const words = wordsData.data?.items ?? [];
+  const shortClips = shortsData.data?.items ?? [];
+  const scheduleItems = scheduleData.data?.items ?? [];
+
+  const teachings = getPublishedTeachings(scientificSeries, lectures, words);
 
   const leadItem = teachings[0] ?? null;
   const sideItems = teachings.slice(1, 4);
 
-  const stats = getStats();
-  const upcomingActivity = getUpcomingActivity();
+  const stats = getStats(scientificSeries, lectures, words, shortClips);
+  const upcomingActivity = getUpcomingActivity(scheduleItems);
 
   const featuredShorts = shortClips
     .filter(

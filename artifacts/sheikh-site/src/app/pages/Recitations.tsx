@@ -12,7 +12,10 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { miscItems, miscSections, type MiscItem } from "../data/miscItems";
+import { publicApi, type PublicMiscItem } from "../lib/publicApi";
+import { usePublicData } from "../lib/usePublicData";
+
+type MiscItem = PublicMiscItem;
 
 function getSectionIcon(icon: string) {
   if (icon === "book") return BookOpen;
@@ -52,20 +55,24 @@ function hasPlayableContent(item: MiscItem) {
 export function Recitations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeSectionSlug, setActiveSectionSlug] = useState("all");
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  const { data, loading, error } = usePublicData(publicApi.getMisc);
+  const miscSections = data?.sections ?? [];
+  const miscItems = data?.items ?? [];
 
   const visibleSections = useMemo(() => {
     return miscSections.filter((section) => section.publishStatus === "منشور");
-  }, []);
+  }, [miscSections]);
 
   const visibleItems = useMemo(() => {
     return miscItems.filter((item) => item.publishStatus === "منشور");
-  }, []);
+  }, [miscItems]);
 
   const sectionsWithAll = useMemo(() => {
     return [
       {
-        id: 0,
+        id: "all",
         title: "الكل",
         slug: "all",
         description: "عرض جميع المواد المتاحة.",
@@ -117,7 +124,7 @@ export function Recitations() {
     setSelectedItemId(null);
   }
 
-  function selectItem(itemId: number) {
+  function selectItem(itemId: string) {
     setSelectedItemId(itemId);
   }
 
@@ -178,7 +185,15 @@ export function Recitations() {
           })}
         </div>
 
-        {selectedItem ? (
+        {loading ? (
+          <div className="rounded-sm border border-gray-200 bg-white p-10 text-center text-gray-500">
+            جارٍ تحميل المتفرقات...
+          </div>
+        ) : error ? (
+          <div className="rounded-sm border border-red-100 bg-red-50 p-10 text-center text-red-700">
+            تعذر تحميل المتفرقات. حاول تحديث الصفحة.
+          </div>
+        ) : selectedItem ? (
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_360px]">
             <main className="overflow-hidden rounded-sm border border-gray-200 bg-white shadow-sm">
               <div className="bg-[var(--color-islamic-green-dark)] px-5 py-4 text-white">
