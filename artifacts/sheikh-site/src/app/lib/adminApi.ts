@@ -180,6 +180,127 @@ export type ShortClipInput = {
   subcategoryId?: string | null;
 };
 
+export type ScheduleKind = "درس" | "محاضرة" | "برنامج" | "لقاء";
+export type ScheduleStatus = "قائم" | "متوقف" | "مؤجل" | "ملغي";
+export type RecurrenceType = "غير متكرر" | "أسبوعي" | "شهري" | "مخصص";
+
+export type ScheduleItem = {
+  id: string;
+  title: string;
+  scheduleKind: ScheduleKind;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  day: string | null;
+  time: string | null;
+  dateHijri: string | null;
+  dateGregorian: string | null;
+  location: string | null;
+  onlineUrl: string | null;
+  isRecurring: boolean;
+  recurrenceType: RecurrenceType;
+  recurrenceDetails: string | null;
+  status: ScheduleStatus;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ScheduleInput = {
+  title: string;
+  scheduleKind: ScheduleKind;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  day?: string;
+  time?: string;
+  dateHijri?: string;
+  dateGregorian?: string;
+  location?: string;
+  onlineUrl?: string;
+  isRecurring: boolean;
+  recurrenceType: RecurrenceType;
+  recurrenceDetails?: string;
+  status: ScheduleStatus;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note?: string;
+};
+
+export type MiscSectionIcon = "audio" | "video" | "file" | "mic" | "book";
+
+export type MiscSection = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  icon: MiscSectionIcon;
+  publishStatus: PublishStatus;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MiscSectionInput = {
+  title: string;
+  description: string;
+  icon: MiscSectionIcon;
+  publishStatus: PublishStatus;
+  displayOrder: number;
+};
+
+export type MiscItem = {
+  id: string;
+  sectionId: string | null;
+  title: string;
+  kind: string;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  duration: string | null;
+  audioUrl: string | null;
+  videoId: string | null;
+  videoUrl: string | null;
+  fileUrl: string | null;
+  externalUrl: string | null;
+  thumbnailUrl: string | null;
+  downloadLabel: string | null;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note: string | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MiscItemInput = {
+  sectionId?: string | null;
+  title: string;
+  kind: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  duration?: string;
+  audioUrl?: string;
+  videoId?: string;
+  videoUrl?: string;
+  fileUrl?: string;
+  externalUrl?: string;
+  thumbnailUrl?: string;
+  downloadLabel?: string;
+  trust: TrustLevel;
+  publishStatus: PublishStatus;
+  tags: string[];
+  displayOrder: number;
+  description: string;
+  note?: string;
+};
+
 export type AdminStats = {
   totals: {
     series: number;
@@ -420,6 +541,104 @@ export const adminApi = {
 
   deleteShort(id: string) {
     return request<{ ok: true; id: string }>(`/admin/shorts/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  listSchedule(
+    params: { search?: string; publishStatus?: string; status?: string } = {},
+  ) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.publishStatus) query.set("publishStatus", params.publishStatus);
+    if (params.status) query.set("status", params.status);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ ok: true; items: ScheduleItem[]; total: number }>(
+      `/admin/schedule${suffix}`,
+    );
+  },
+
+  createScheduleItem(input: ScheduleInput) {
+    return request<{ ok: true; item: ScheduleItem }>("/admin/schedule", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateScheduleItem(id: string, input: ScheduleInput) {
+    return request<{ ok: true; item: ScheduleItem }>(`/admin/schedule/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteScheduleItem(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/schedule/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  listMiscSections(params: { search?: string } = {}) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ ok: true; items: MiscSection[]; total: number }>(
+      `/admin/misc/sections${suffix}`,
+    );
+  },
+
+  createMiscSection(input: MiscSectionInput) {
+    return request<{ ok: true; item: MiscSection }>("/admin/misc/sections", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateMiscSection(id: string, input: MiscSectionInput) {
+    return request<{ ok: true; item: MiscSection }>(
+      `/admin/misc/sections/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      },
+    );
+  },
+
+  deleteMiscSection(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/misc/sections/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  listMiscItems(
+    params: { search?: string; publishStatus?: string; sectionId?: string } = {},
+  ) {
+    const query = new URLSearchParams();
+    if (params.search) query.set("search", params.search);
+    if (params.publishStatus) query.set("publishStatus", params.publishStatus);
+    if (params.sectionId) query.set("sectionId", params.sectionId);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<{ ok: true; items: MiscItem[]; total: number }>(
+      `/admin/misc/items${suffix}`,
+    );
+  },
+
+  createMiscItem(input: MiscItemInput) {
+    return request<{ ok: true; item: MiscItem }>("/admin/misc/items", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  updateMiscItem(id: string, input: MiscItemInput) {
+    return request<{ ok: true; item: MiscItem }>(`/admin/misc/items/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  deleteMiscItem(id: string) {
+    return request<{ ok: true; id: string }>(`/admin/misc/items/${id}`, {
       method: "DELETE",
     });
   },

@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Boxes,
   CalendarDays,
   CheckCircle2,
   Clock,
@@ -28,6 +29,8 @@ import { SeriesManager } from "../components/admin/SeriesManager";
 import { LecturesManager } from "../components/admin/LecturesManager";
 import { WordsManager } from "../components/admin/WordsManager";
 import { ShortsManager } from "../components/admin/ShortsManager";
+import { ScheduleManager } from "../components/admin/ScheduleManager";
+import { MiscManager } from "../components/admin/MiscManager";
 import { adminApi, type AdminStats } from "../lib/adminApi";
 import { adminSections, type AdminSection } from "../data/adminSections";
 import { adminSupervisors } from "../data/adminSupervisors";
@@ -67,6 +70,7 @@ const sectionIcons = {
   lectures: Mic2,
   words: Megaphone,
   schedule: CalendarDays,
+  misc: Boxes,
   knowledge: FolderTree,
   tags: Tags,
   supervisors: UserCog,
@@ -157,7 +161,14 @@ export function Admin() {
     adminSections[0];
 
   // Sections that render their own DB-backed manager (with their own toolbar).
-  const managedSections = ["series", "lectures", "words", "shorts"];
+  const managedSections = [
+    "series",
+    "lectures",
+    "words",
+    "shorts",
+    "schedule",
+    "misc",
+  ];
   const isManagedSection = managedSections.includes(activeSection);
 
   const visibleItems = contentItems.filter((item) => {
@@ -217,6 +228,10 @@ export function Admin() {
     if (section === "words") return liveStats?.totals.words ?? 0;
     if (section === "shorts")
       return liveStats?.totals.shortClips ?? shortClips.length;
+    if (section === "schedule")
+      return liveStats?.totals.scheduleItems ?? 0;
+    if (section === "misc")
+      return liveStats?.totals.miscItems ?? 0;
     if (section === "knowledge") return knowledgeCategories.length;
     if (section === "tags") return adminTags.length;
     if (section === "supervisors") return adminSupervisors.length;
@@ -446,106 +461,12 @@ export function Admin() {
               <ShortsManager onMutate={refreshStats} />
             )}
 
-            {["schedule"].includes(activeSection) && (
-              <section className="overflow-x-auto">
-                <table className="w-full min-w-[820px] text-right">
-                  <thead className="bg-gray-50 text-sm text-gray-500">
-                    <tr>
-                      <th className="px-5 py-3 font-bold">العنوان</th>
-                      <th className="px-5 py-3 font-bold">النوع</th>
-                      <th className="px-5 py-3 font-bold">باب العلم</th>
-                      <th className="px-5 py-3 font-bold">الحالة</th>
-                      <th className="px-5 py-3 font-bold">الوسوم</th>
-                      <th className="px-5 py-3 font-bold">الإجراءات</th>
-                    </tr>
-                  </thead>
+            {activeSection === "schedule" && (
+              <ScheduleManager onMutate={refreshStats} />
+            )}
 
-                  <tbody className="divide-y divide-gray-100">
-                    {visibleItems.length > 0 ? (
-                      visibleItems.map((item) => (
-                        <tr
-                          key={item.id}
-                          className="align-top transition-colors hover:bg-gray-50"
-                        >
-                          <td className="px-5 py-4">
-                            <p className="font-bold text-gray-800">
-                              {item.title}
-                            </p>
-                            <p className="mt-1 text-xs text-gray-500">
-                              {item.source || "لا يوجد مصدر محدد"}
-                              {item.meta ? ` — ${item.meta}` : ""}
-                            </p>
-                          </td>
-
-                          <td className="px-5 py-4 text-sm text-gray-600">
-                            {item.type}
-                          </td>
-
-                          <td className="px-5 py-4 text-sm text-gray-600">
-                            {item.category}
-                          </td>
-
-                          <td className="px-5 py-4">
-                            <span
-                              className={`inline-flex rounded-sm px-3 py-1 text-xs font-bold ${statusClass(
-                                item.status,
-                              )}`}
-                            >
-                              {item.status}
-                            </span>
-                          </td>
-
-                          <td className="px-5 py-4">
-                            <div className="flex flex-wrap gap-1">
-                              {item.tags.map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="rounded-sm bg-gray-100 px-2 py-1 text-xs text-gray-600"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-
-                          <td className="px-5 py-4">
-                            <div className="flex items-center gap-2">
-                              {item.url && (
-                                <a
-                                  href={item.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="rounded-sm p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[var(--color-islamic-green)]"
-                                  title="فتح الرابط"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              )}
-
-                              <button className="rounded-sm p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[var(--color-islamic-green)]">
-                                <Edit3 className="h-4 w-4" />
-                              </button>
-
-                              <button className="rounded-sm p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-5 py-12 text-center text-gray-500"
-                        >
-                          لا توجد عناصر في هذا القسم حاليًا.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </section>
+            {activeSection === "misc" && (
+              <MiscManager onMutate={refreshStats} />
             )}
 
             {activeSection === "knowledge" && (

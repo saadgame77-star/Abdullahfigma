@@ -5,6 +5,7 @@ export type AdminSection =
   | "lectures"
   | "words"
   | "schedule"
+  | "misc"
   | "knowledge"
   | "tags"
   | "supervisors"
@@ -46,6 +47,11 @@ export const adminSections: AdminSectionItem[] = [
     key: "schedule",
     title: "الجدول",
     description: "مواعيد الدروس والمحاضرات والبرامج.",
+  },
+  {
+    key: "misc",
+    title: "المتفرقات",
+    description: "صوتيات وملفات وروابط وفيديو منوّعة.",
   },
   {
     key: "knowledge",

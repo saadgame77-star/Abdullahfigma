@@ -96,6 +96,16 @@ export function integerValue(
   return rounded;
 }
 
+export function booleanValue(
+  value: unknown,
+  options: { fallback?: boolean } = {},
+): boolean {
+  if (typeof value === "boolean") return value;
+  if (value === "true" || value === 1 || value === "1") return true;
+  if (value === "false" || value === 0 || value === "0") return false;
+  return options.fallback ?? false;
+}
+
 export function stringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
