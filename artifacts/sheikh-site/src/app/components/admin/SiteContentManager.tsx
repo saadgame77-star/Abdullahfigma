@@ -5,6 +5,8 @@ import {
   History,
   Images,
   Loader2,
+  Maximize2,
+  Minimize2,
   Plus,
   RefreshCw,
   Rocket,
@@ -95,6 +97,7 @@ export function SiteContentManager() {
   const [versions, setVersions] = useState<SiteContentVersion[]>([]);
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [tab, setTab] = useState("appearance");
+  const [previewFullscreen, setPreviewFullscreen] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewReady = useRef(false);
@@ -905,26 +908,55 @@ export function SiteContentManager() {
         </div>
 
         {/* Live preview */}
-        <div className="xl:sticky xl:top-4 xl:self-start">
+        <div
+          className={
+            previewFullscreen
+              ? "fixed inset-0 z-50 flex flex-col bg-white p-4"
+              : "xl:sticky xl:top-4 xl:self-start"
+          }
+        >
           <div className="mb-2 flex items-center justify-between">
             <span className="inline-flex items-center gap-2 text-sm font-bold text-gray-700">
               <Eye className="h-4 w-4" /> معاينة حيّة — انقر النص لتحريره
             </span>
-            <button
-              type="button"
-              onClick={refreshPreview}
-              className="inline-flex items-center gap-1.5 rounded-sm border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              تحديث
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={refreshPreview}
+                className="inline-flex items-center gap-1.5 rounded-sm border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                تحديث
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewFullscreen((value) => !value)}
+                className="inline-flex items-center gap-1.5 rounded-sm border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+              >
+                {previewFullscreen ? (
+                  <>
+                    <Minimize2 className="h-3.5 w-3.5" />
+                    تصغير
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 className="h-3.5 w-3.5" />
+                    تكبير
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-          <div className="overflow-hidden rounded-sm border border-gray-200 bg-white">
+          <div
+            className={`overflow-hidden rounded-sm border border-gray-200 bg-white ${
+              previewFullscreen ? "flex-1" : ""
+            }`}
+          >
             <iframe
               ref={iframeRef}
               src={PREVIEW_SRC}
               title="معاينة الموقع"
-              className="h-[70vh] w-full"
+              className={previewFullscreen ? "h-full w-full" : "h-[78vh] w-full"}
             />
           </div>
         </div>
