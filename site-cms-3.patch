@@ -1,0 +1,218 @@
+diff --git a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+index b9a9dca..bd2ed8d 100644
+--- a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
++++ b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+@@ -20,6 +20,7 @@ import {
+ import {
+   defaultSiteContent,
+   mergeSiteContent,
++  type HomeSection,
+   type NavLink,
+   type SiteContent,
+ } from "../../data/siteContent";
+@@ -411,6 +412,12 @@ export function SiteContentManager() {
+               value={content.pages.home.stats.title}
+               onChange={(v) => edit((d) => (d.pages.home.stats.title = v))}
+             />
++
++            <SubTitle>ترتيب وإظهار الأقسام</SubTitle>
++            <HomeSectionsEditor
++              items={content.pages.home.sections}
++              onChange={(items) => edit((d) => (d.pages.home.sections = items))}
++            />
+           </Group>
+ 
+           <Group title="صفحة: الدروس العلمية">
+@@ -974,3 +981,74 @@ function StringListEditor({
+     </div>
+   );
+ }
++
++const HOME_SECTION_LABELS: Record<string, string> = {
++  latest: "أحدث المحتوى",
++  shorts: "المقاطع القصيرة",
++  stats: "الإحصاءات",
++};
++
++function HomeSectionsEditor({
++  items,
++  onChange,
++}: {
++  items: HomeSection[];
++  onChange: (items: HomeSection[]) => void;
++}) {
++  function move(index: number, dir: -1 | 1) {
++    const target = index + dir;
++    if (target < 0 || target >= items.length) return;
++    const next = [...items];
++    [next[index], next[target]] = [next[target], next[index]];
++    onChange(next);
++  }
++  function toggle(index: number) {
++    onChange(
++      items.map((it, i) =>
++        i === index ? { ...it, visible: !it.visible } : it,
++      ),
++    );
++  }
++
++  return (
++    <div className="space-y-2">
++      {items.map((item, index) => (
++        <div
++          key={item.key}
++          className="flex items-center gap-2 rounded-sm border border-gray-100 bg-gray-50 p-2"
++        >
++          <div className="flex flex-col">
++            <button
++              type="button"
++              onClick={() => move(index, -1)}
++              className="text-gray-400 hover:text-gray-700"
++              aria-label="أعلى"
++            >
++              ▲
++            </button>
++            <button
++              type="button"
++              onClick={() => move(index, 1)}
++              className="text-gray-400 hover:text-gray-700"
++              aria-label="أسفل"
++            >
++              ▼
++            </button>
++          </div>
++          <span className="flex-1 text-sm font-medium text-gray-700">
++            {HOME_SECTION_LABELS[item.key] ?? item.key}
++          </span>
++          <label className="flex items-center gap-2 text-xs text-gray-600">
++            <input
++              type="checkbox"
++              checked={item.visible}
++              onChange={() => toggle(index)}
++              className="h-4 w-4 accent-[var(--color-islamic-green)]"
++            />
++            ظاهر
++          </label>
++        </div>
++      ))}
++    </div>
++  );
++}
+diff --git a/artifacts/sheikh-site/src/app/data/siteContent.ts b/artifacts/sheikh-site/src/app/data/siteContent.ts
+index 064c604..2e0562a 100644
+--- a/artifacts/sheikh-site/src/app/data/siteContent.ts
++++ b/artifacts/sheikh-site/src/app/data/siteContent.ts
+@@ -7,6 +7,10 @@ export type NavLink = { label: string; href: string };
+ 
+ export type PageHeader = { badge: string; title: string; description: string };
+ 
++export type HomeSectionKey = "latest" | "shorts" | "stats";
++
++export type HomeSection = { key: HomeSectionKey; visible: boolean };
++
+ export type SiteThemeColors = {
+   green: string;
+   greenLight: string;
+@@ -58,6 +62,7 @@ export type SiteContent = {
+       };
+       shorts: { eyebrow: string; heading: string };
+       stats: { eyebrow: string; title: string };
++      sections: HomeSection[];
+     };
+     lessons: PageHeader & { searchPlaceholder: string };
+     lectures: PageHeader & { searchPlaceholder: string };
+@@ -170,6 +175,11 @@ export const defaultSiteContent: SiteContent = {
+         eyebrow: "المحتوى في أرقام",
+         title: "نظرة على ما يضمّه الموقع",
+       },
++      sections: [
++        { key: "latest", visible: true },
++        { key: "shorts", visible: true },
++        { key: "stats", visible: true },
++      ],
+     },
+     lessons: {
+       badge: "مكتبة المشاهدة العلمية",
+diff --git a/artifacts/sheikh-site/src/app/pages/Home.tsx b/artifacts/sheikh-site/src/app/pages/Home.tsx
+index 3a119ee..bcec337 100644
+--- a/artifacts/sheikh-site/src/app/pages/Home.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Home.tsx
+@@ -226,6 +226,15 @@ export function Home() {
+     )
+     .slice(0, 4);
+ 
++  // Order/visibility of the home sections are admin-configurable. We keep the
++  // JSX in place and reorder visually via flexbox `order`.
++  const homeSectionOrder = (key: string) => {
++    const index = home.sections.findIndex((s) => s.key === key);
++    return index === -1 ? 99 : index;
++  };
++  const homeSectionVisible = (key: string) =>
++    home.sections.find((s) => s.key === key)?.visible ?? true;
++
+   return (
+     <div dir="rtl" className="animate-in fade-in duration-500">
+       {/* ===== الهيرو: رسالة موجزة + نشاط قادم مدمج ===== */}
+@@ -333,8 +342,13 @@ export function Home() {
+         </div>
+       </section>
+ 
+-      {/* ===== أحدث المحاضرات والدروس: عنصر بارز + قائمة جانبية ===== */}
+-      <section className="bg-white/60 py-14">
++      <div className="flex flex-col">
++        {/* ===== أحدث المحاضرات والدروس: عنصر بارز + قائمة جانبية ===== */}
++        {homeSectionVisible("latest") && (
++          <section
++            style={{ order: homeSectionOrder("latest") }}
++            className="bg-white/60 py-14"
++          >
+         <div className="container mx-auto px-4">
+           <SectionHeading
+             eyebrow={home.latest.eyebrow}
+@@ -439,11 +453,15 @@ export function Home() {
+             </div>
+           )}
+         </div>
+-      </section>
+-
+-      {/* ===== فوائد قصيرة: شريط أفقي ===== */}
+-      {featuredShorts.length > 0 && (
+-        <section className="container mx-auto px-4 py-14">
++        </section>
++        )}
++
++        {/* ===== فوائد قصيرة: شريط أفقي ===== */}
++        {homeSectionVisible("shorts") && featuredShorts.length > 0 && (
++          <section
++            style={{ order: homeSectionOrder("shorts") }}
++            className="container mx-auto px-4 py-14"
++          >
+           <SectionHeading
+             eyebrow={home.shorts.eyebrow}
+             title={home.shorts.heading}
+@@ -491,8 +509,12 @@ export function Home() {
+         </section>
+       )}
+ 
+-      {/* ===== الإحصاءات: شريط ختامي على خلفية داكنة ===== */}
+-      <section className="bg-[var(--color-islamic-green-dark)] py-12">
++        {/* ===== الإحصاءات: شريط ختامي على خلفية داكنة ===== */}
++        {homeSectionVisible("stats") && (
++          <section
++            style={{ order: homeSectionOrder("stats") }}
++            className="bg-[var(--color-islamic-green-dark)] py-12"
++          >
+         <div className="container mx-auto px-4">
+           <div className="mb-8 text-center">
+             <p className="mb-1 text-sm font-medium text-[var(--color-islamic-gold)]">
+@@ -523,7 +545,9 @@ export function Home() {
+             ))}
+           </div>
+         </div>
+-      </section>
++        </section>
++        )}
++      </div>
+     </div>
+   );
+ }

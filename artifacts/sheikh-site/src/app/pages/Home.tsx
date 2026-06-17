@@ -226,6 +226,15 @@ export function Home() {
     )
     .slice(0, 4);
 
+  // Order/visibility of the home sections are admin-configurable. We keep the
+  // JSX in place and reorder visually via flexbox `order`.
+  const homeSectionOrder = (key: string) => {
+    const index = home.sections.findIndex((s) => s.key === key);
+    return index === -1 ? 99 : index;
+  };
+  const homeSectionVisible = (key: string) =>
+    home.sections.find((s) => s.key === key)?.visible ?? true;
+
   return (
     <div dir="rtl" className="animate-in fade-in duration-500">
       {/* ===== الهيرو: رسالة موجزة + نشاط قادم مدمج ===== */}
@@ -333,8 +342,13 @@ export function Home() {
         </div>
       </section>
 
-      {/* ===== أحدث المحاضرات والدروس: عنصر بارز + قائمة جانبية ===== */}
-      <section className="bg-white/60 py-14">
+      <div className="flex flex-col">
+        {/* ===== أحدث المحاضرات والدروس: عنصر بارز + قائمة جانبية ===== */}
+        {homeSectionVisible("latest") && (
+          <section
+            style={{ order: homeSectionOrder("latest") }}
+            className="bg-white/60 py-14"
+          >
         <div className="container mx-auto px-4">
           <SectionHeading
             eyebrow={home.latest.eyebrow}
@@ -439,11 +453,15 @@ export function Home() {
             </div>
           )}
         </div>
-      </section>
+        </section>
+        )}
 
-      {/* ===== فوائد قصيرة: شريط أفقي ===== */}
-      {featuredShorts.length > 0 && (
-        <section className="container mx-auto px-4 py-14">
+        {/* ===== فوائد قصيرة: شريط أفقي ===== */}
+        {homeSectionVisible("shorts") && featuredShorts.length > 0 && (
+          <section
+            style={{ order: homeSectionOrder("shorts") }}
+            className="container mx-auto px-4 py-14"
+          >
           <SectionHeading
             eyebrow={home.shorts.eyebrow}
             title={home.shorts.heading}
@@ -491,8 +509,12 @@ export function Home() {
         </section>
       )}
 
-      {/* ===== الإحصاءات: شريط ختامي على خلفية داكنة ===== */}
-      <section className="bg-[var(--color-islamic-green-dark)] py-12">
+        {/* ===== الإحصاءات: شريط ختامي على خلفية داكنة ===== */}
+        {homeSectionVisible("stats") && (
+          <section
+            style={{ order: homeSectionOrder("stats") }}
+            className="bg-[var(--color-islamic-green-dark)] py-12"
+          >
         <div className="container mx-auto px-4">
           <div className="mb-8 text-center">
             <p className="mb-1 text-sm font-medium text-[var(--color-islamic-gold)]">
@@ -523,7 +545,9 @@ export function Home() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
+        )}
+      </div>
     </div>
   );
 }

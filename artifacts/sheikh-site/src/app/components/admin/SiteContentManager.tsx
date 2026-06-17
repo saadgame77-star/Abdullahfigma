@@ -20,6 +20,7 @@ import {
 import {
   defaultSiteContent,
   mergeSiteContent,
+  type HomeSection,
   type NavLink,
   type SiteContent,
 } from "../../data/siteContent";
@@ -410,6 +411,12 @@ export function SiteContentManager() {
               label="العنوان"
               value={content.pages.home.stats.title}
               onChange={(v) => edit((d) => (d.pages.home.stats.title = v))}
+            />
+
+            <SubTitle>ترتيب وإظهار الأقسام</SubTitle>
+            <HomeSectionsEditor
+              items={content.pages.home.sections}
+              onChange={(items) => edit((d) => (d.pages.home.sections = items))}
             />
           </Group>
 
@@ -971,6 +978,77 @@ function StringListEditor({
         <Plus className="h-4 w-4" />
         إضافة عنصر
       </button>
+    </div>
+  );
+}
+
+const HOME_SECTION_LABELS: Record<string, string> = {
+  latest: "أحدث المحتوى",
+  shorts: "المقاطع القصيرة",
+  stats: "الإحصاءات",
+};
+
+function HomeSectionsEditor({
+  items,
+  onChange,
+}: {
+  items: HomeSection[];
+  onChange: (items: HomeSection[]) => void;
+}) {
+  function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+  function toggle(index: number) {
+    onChange(
+      items.map((it, i) =>
+        i === index ? { ...it, visible: !it.visible } : it,
+      ),
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {items.map((item, index) => (
+        <div
+          key={item.key}
+          className="flex items-center gap-2 rounded-sm border border-gray-100 bg-gray-50 p-2"
+        >
+          <div className="flex flex-col">
+            <button
+              type="button"
+              onClick={() => move(index, -1)}
+              className="text-gray-400 hover:text-gray-700"
+              aria-label="أعلى"
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              onClick={() => move(index, 1)}
+              className="text-gray-400 hover:text-gray-700"
+              aria-label="أسفل"
+            >
+              ▼
+            </button>
+          </div>
+          <span className="flex-1 text-sm font-medium text-gray-700">
+            {HOME_SECTION_LABELS[item.key] ?? item.key}
+          </span>
+          <label className="flex items-center gap-2 text-xs text-gray-600">
+            <input
+              type="checkbox"
+              checked={item.visible}
+              onChange={() => toggle(index)}
+              className="h-4 w-4 accent-[var(--color-islamic-green)]"
+            />
+            ظاهر
+          </label>
+        </div>
+      ))}
     </div>
   );
 }

@@ -7,6 +7,10 @@ export type NavLink = { label: string; href: string };
 
 export type PageHeader = { badge: string; title: string; description: string };
 
+export type HomeSectionKey = "latest" | "shorts" | "stats";
+
+export type HomeSection = { key: HomeSectionKey; visible: boolean };
+
 export type SiteThemeColors = {
   green: string;
   greenLight: string;
@@ -58,6 +62,7 @@ export type SiteContent = {
       };
       shorts: { eyebrow: string; heading: string };
       stats: { eyebrow: string; title: string };
+      sections: HomeSection[];
     };
     lessons: PageHeader & { searchPlaceholder: string };
     lectures: PageHeader & { searchPlaceholder: string };
@@ -170,6 +175,11 @@ export const defaultSiteContent: SiteContent = {
         eyebrow: "المحتوى في أرقام",
         title: "نظرة على ما يضمّه الموقع",
       },
+      sections: [
+        { key: "latest", visible: true },
+        { key: "shorts", visible: true },
+        { key: "stats", visible: true },
+      ],
     },
     lessons: {
       badge: "مكتبة المشاهدة العلمية",
