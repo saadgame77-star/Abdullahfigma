@@ -23,6 +23,7 @@ import {
   type ContactChannel,
   type HomeSection,
   type NavLink,
+  type SeoPageKey,
   type SiteContent,
 } from "../../data/siteContent";
 import {
@@ -45,6 +46,17 @@ const COLOR_FIELDS: { key: keyof SiteContent["theme"]["colors"]; label: string }
     { key: "gray", label: "الرمادي" },
     { key: "text", label: "لون النص" },
   ];
+
+const SEO_PAGES: { key: SeoPageKey; label: string }[] = [
+  { key: "home", label: "الرئيسية" },
+  { key: "lessons", label: "الدروس العلمية" },
+  { key: "lectures", label: "المحاضرات" },
+  { key: "words", label: "الكلمات الدعوية" },
+  { key: "shorts", label: "المقاطع القصيرة" },
+  { key: "recitations", label: "المتفرقات" },
+  { key: "schedule", label: "الجدول" },
+  { key: "contact", label: "تواصل معنا" },
+];
 
 export function SiteContentManager() {
   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
@@ -728,12 +740,48 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="SEO">
+          <Group title="SEO ومحركات البحث">
+            <label className="flex items-center gap-2 rounded-sm border border-gray-200 bg-gray-50 p-3 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={content.seo.allowIndexing}
+                onChange={(e) =>
+                  edit((d) => (d.seo.allowIndexing = e.target.checked))
+                }
+                className="h-4 w-4 accent-[var(--color-islamic-green)]"
+              />
+              السماح لمحركات البحث بفهرسة الموقع
+            </label>
             <TextField
-              label="عنوان الموقع (في المتصفح)"
+              label="اسم الموقع (يُضاف لعناوين الصفحات)"
               value={content.seo.siteTitle}
               onChange={(v) => edit((d) => (d.seo.siteTitle = v))}
             />
+            <TextArea
+              label="الوصف الافتراضي"
+              value={content.seo.defaultDescription}
+              onChange={(v) => edit((d) => (d.seo.defaultDescription = v))}
+            />
+
+            {SEO_PAGES.map((entry) => (
+              <div key={entry.key}>
+                <SubTitle>{entry.label}</SubTitle>
+                <TextField
+                  label="عنوان الصفحة"
+                  value={content.seo.pages[entry.key].title}
+                  onChange={(v) =>
+                    edit((d) => (d.seo.pages[entry.key].title = v))
+                  }
+                />
+                <TextArea
+                  label="وصف الصفحة"
+                  value={content.seo.pages[entry.key].description}
+                  onChange={(v) =>
+                    edit((d) => (d.seo.pages[entry.key].description = v))
+                  }
+                />
+              </div>
+            ))}
           </Group>
         </div>
 

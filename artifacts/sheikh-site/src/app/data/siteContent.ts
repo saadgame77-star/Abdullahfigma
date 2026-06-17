@@ -18,6 +18,18 @@ export type HomeSectionKey = "latest" | "shorts" | "stats";
 
 export type HomeSection = { key: HomeSectionKey; visible: boolean };
 
+export type SeoPageKey =
+  | "home"
+  | "lessons"
+  | "lectures"
+  | "words"
+  | "shorts"
+  | "recitations"
+  | "schedule"
+  | "contact";
+
+export type SeoPage = { title: string; description: string };
+
 export type SiteThemeColors = {
   green: string;
   greenLight: string;
@@ -108,6 +120,9 @@ export type SiteContent = {
   };
   seo: {
     siteTitle: string;
+    defaultDescription: string;
+    allowIndexing: boolean;
+    pages: Record<SeoPageKey, SeoPage>;
   };
 };
 
@@ -262,6 +277,46 @@ export const defaultSiteContent: SiteContent = {
   },
   seo: {
     siteTitle: "الشيخ عبدالله بن سعد آل غلفيص",
+    defaultDescription:
+      "منصة علمية تعنى بنشر السلاسل العلمية، والمحاضرات، والكلمات الدعوية، والمقاطع القصيرة، والمواد المتفرقة، لتكون مرجعًا منظمًا لطالبي العلم.",
+    allowIndexing: false,
+    pages: {
+      home: {
+        title: "",
+        description:
+          "دروس الشيخ عبدالله بن سعد آل غلفيص ومحاضراته وكلماته الدعوية في موضع واحد منظّم وفق أبواب العلم.",
+      },
+      lessons: {
+        title: "الدروس العلمية",
+        description:
+          "السلاسل العلمية للشيخ مرتّبة وفق أبواب العلم، تُشاهد مباشرة داخل الصفحة.",
+      },
+      lectures: {
+        title: "المحاضرات",
+        description:
+          "محاضرات ولقاءات علمية ودعوية للشيخ لا تندرج ضمن السلاسل العلمية.",
+      },
+      words: {
+        title: "الكلمات الدعوية",
+        description: "كلمات موجزة وتوجيهات نافعة للشيخ مع مشغّل واضح للفيديو.",
+      },
+      shorts: {
+        title: "المقاطع القصيرة",
+        description: "فوائد مختصرة ومقاطع قصيرة منتقاة من محتوى الشيخ.",
+      },
+      recitations: {
+        title: "متفرقات",
+        description: "تلاوات وخطب وكتب وملفات ومواد متفرقة.",
+      },
+      schedule: {
+        title: "جدول المحاضرات والدروس",
+        description: "مواعيد الدروس والمحاضرات والأنشطة القادمة.",
+      },
+      contact: {
+        title: "تواصل معنا",
+        description: "القنوات الرسمية للتواصل ومتابعة محتوى الشيخ.",
+      },
+    },
   },
 };
 

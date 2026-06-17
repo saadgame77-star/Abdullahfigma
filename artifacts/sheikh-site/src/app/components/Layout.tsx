@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useSiteContent } from "./SiteContentProvider";
+import { SeoManager } from "./SeoManager";
 
 function useTodayDates() {
   return useMemo(() => {
@@ -69,6 +70,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-[var(--color-islamic-ivory)]">
+      <SeoManager />
       <header className="bg-[var(--color-islamic-green)] text-white shadow-md relative z-50">
         <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-islamic-gold)]" />
 

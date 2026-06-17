@@ -1,0 +1,259 @@
+diff --git a/artifacts/sheikh-site/src/app/components/Layout.tsx b/artifacts/sheikh-site/src/app/components/Layout.tsx
+index f581e25..c828f0d 100644
+--- a/artifacts/sheikh-site/src/app/components/Layout.tsx
++++ b/artifacts/sheikh-site/src/app/components/Layout.tsx
+@@ -12,6 +12,7 @@ import {
+ } from "lucide-react";
+ import { useMemo, useState, type ReactNode } from "react";
+ import { useSiteContent } from "./SiteContentProvider";
++import { SeoManager } from "./SeoManager";
+ 
+ function useTodayDates() {
+   return useMemo(() => {
+@@ -69,6 +70,7 @@ export function Layout() {
+ 
+   return (
+     <div className="min-h-screen flex flex-col font-sans bg-[var(--color-islamic-ivory)]">
++      <SeoManager />
+       <header className="bg-[var(--color-islamic-green)] text-white shadow-md relative z-50">
+         <div className="absolute top-0 left-0 w-full h-1 bg-[var(--color-islamic-gold)]" />
+ 
+diff --git a/artifacts/sheikh-site/src/app/components/SeoManager.tsx b/artifacts/sheikh-site/src/app/components/SeoManager.tsx
+new file mode 100644
+index 0000000..07f804a
+--- /dev/null
++++ b/artifacts/sheikh-site/src/app/components/SeoManager.tsx
+@@ -0,0 +1,72 @@
++import { useEffect } from "react";
++import { useLocation } from "react-router";
++import { useSiteContent } from "./SiteContentProvider";
++import type { SeoPageKey } from "../data/siteContent";
++
++const ROUTE_TO_SEO: Record<string, SeoPageKey> = {
++  "/": "home",
++  "/lessons": "lessons",
++  "/series": "lessons",
++  "/lectures": "lectures",
++  "/words": "words",
++  "/shorts": "shorts",
++  "/recitations": "recitations",
++  "/schedule": "schedule",
++  "/contact": "contact",
++};
++
++function setMeta(
++  attr: "name" | "property",
++  key: string,
++  content: string,
++) {
++  let el = document.head.querySelector<HTMLMetaElement>(
++    `meta[${attr}="${key}"]`,
++  );
++  if (!el) {
++    el = document.createElement("meta");
++    el.setAttribute(attr, key);
++    document.head.appendChild(el);
++  }
++  el.setAttribute("content", content);
++}
++
++// Applies per-page title/description/robots/OG tags imperatively as the route
++// changes. Mounted inside the router (Layout) so it can read the location.
++export function SeoManager() {
++  const content = useSiteContent();
++  const { pathname } = useLocation();
++
++  useEffect(() => {
++    const seo = content.seo;
++    const key = ROUTE_TO_SEO[pathname];
++    const page = key ? seo.pages[key] : undefined;
++
++    const hasTitle = Boolean(page?.title?.trim());
++    const title =
++      hasTitle && key !== "home"
++        ? `${page!.title} — ${seo.siteTitle}`
++        : hasTitle
++          ? page!.title
++          : seo.siteTitle;
++
++    const description = page?.description?.trim()
++      ? page.description
++      : seo.defaultDescription;
++
++    document.title = title;
++    setMeta("name", "description", description);
++    setMeta(
++      "name",
++      "robots",
++      seo.allowIndexing
++        ? "index, follow"
++        : "noindex, nofollow, noarchive, nosnippet",
++    );
++    setMeta("property", "og:title", title);
++    setMeta("property", "og:description", description);
++    setMeta("property", "og:type", "website");
++  }, [pathname, content]);
++
++  return null;
++}
+diff --git a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+index a7a1569..0421f11 100644
+--- a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
++++ b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+@@ -23,6 +23,7 @@ import {
+   type ContactChannel,
+   type HomeSection,
+   type NavLink,
++  type SeoPageKey,
+   type SiteContent,
+ } from "../../data/siteContent";
+ import {
+@@ -46,6 +47,17 @@ const COLOR_FIELDS: { key: keyof SiteContent["theme"]["colors"]; label: string }
+     { key: "text", label: "لون النص" },
+   ];
+ 
++const SEO_PAGES: { key: SeoPageKey; label: string }[] = [
++  { key: "home", label: "الرئيسية" },
++  { key: "lessons", label: "الدروس العلمية" },
++  { key: "lectures", label: "المحاضرات" },
++  { key: "words", label: "الكلمات الدعوية" },
++  { key: "shorts", label: "المقاطع القصيرة" },
++  { key: "recitations", label: "المتفرقات" },
++  { key: "schedule", label: "الجدول" },
++  { key: "contact", label: "تواصل معنا" },
++];
++
+ export function SiteContentManager() {
+   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
+   const [loading, setLoading] = useState(true);
+@@ -728,12 +740,48 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="SEO">
++          <Group title="SEO ومحركات البحث">
++            <label className="flex items-center gap-2 rounded-sm border border-gray-200 bg-gray-50 p-3 text-sm font-medium text-gray-700">
++              <input
++                type="checkbox"
++                checked={content.seo.allowIndexing}
++                onChange={(e) =>
++                  edit((d) => (d.seo.allowIndexing = e.target.checked))
++                }
++                className="h-4 w-4 accent-[var(--color-islamic-green)]"
++              />
++              السماح لمحركات البحث بفهرسة الموقع
++            </label>
+             <TextField
+-              label="عنوان الموقع (في المتصفح)"
++              label="اسم الموقع (يُضاف لعناوين الصفحات)"
+               value={content.seo.siteTitle}
+               onChange={(v) => edit((d) => (d.seo.siteTitle = v))}
+             />
++            <TextArea
++              label="الوصف الافتراضي"
++              value={content.seo.defaultDescription}
++              onChange={(v) => edit((d) => (d.seo.defaultDescription = v))}
++            />
++
++            {SEO_PAGES.map((entry) => (
++              <div key={entry.key}>
++                <SubTitle>{entry.label}</SubTitle>
++                <TextField
++                  label="عنوان الصفحة"
++                  value={content.seo.pages[entry.key].title}
++                  onChange={(v) =>
++                    edit((d) => (d.seo.pages[entry.key].title = v))
++                  }
++                />
++                <TextArea
++                  label="وصف الصفحة"
++                  value={content.seo.pages[entry.key].description}
++                  onChange={(v) =>
++                    edit((d) => (d.seo.pages[entry.key].description = v))
++                  }
++                />
++              </div>
++            ))}
+           </Group>
+         </div>
+ 
+diff --git a/artifacts/sheikh-site/src/app/data/siteContent.ts b/artifacts/sheikh-site/src/app/data/siteContent.ts
+index 906d6f2..6a4cc94 100644
+--- a/artifacts/sheikh-site/src/app/data/siteContent.ts
++++ b/artifacts/sheikh-site/src/app/data/siteContent.ts
+@@ -18,6 +18,18 @@ export type HomeSectionKey = "latest" | "shorts" | "stats";
+ 
+ export type HomeSection = { key: HomeSectionKey; visible: boolean };
+ 
++export type SeoPageKey =
++  | "home"
++  | "lessons"
++  | "lectures"
++  | "words"
++  | "shorts"
++  | "recitations"
++  | "schedule"
++  | "contact";
++
++export type SeoPage = { title: string; description: string };
++
+ export type SiteThemeColors = {
+   green: string;
+   greenLight: string;
+@@ -108,6 +120,9 @@ export type SiteContent = {
+   };
+   seo: {
+     siteTitle: string;
++    defaultDescription: string;
++    allowIndexing: boolean;
++    pages: Record<SeoPageKey, SeoPage>;
+   };
+ };
+ 
+@@ -262,6 +277,46 @@ export const defaultSiteContent: SiteContent = {
+   },
+   seo: {
+     siteTitle: "الشيخ عبدالله بن سعد آل غلفيص",
++    defaultDescription:
++      "منصة علمية تعنى بنشر السلاسل العلمية، والمحاضرات، والكلمات الدعوية، والمقاطع القصيرة، والمواد المتفرقة، لتكون مرجعًا منظمًا لطالبي العلم.",
++    allowIndexing: false,
++    pages: {
++      home: {
++        title: "",
++        description:
++          "دروس الشيخ عبدالله بن سعد آل غلفيص ومحاضراته وكلماته الدعوية في موضع واحد منظّم وفق أبواب العلم.",
++      },
++      lessons: {
++        title: "الدروس العلمية",
++        description:
++          "السلاسل العلمية للشيخ مرتّبة وفق أبواب العلم، تُشاهد مباشرة داخل الصفحة.",
++      },
++      lectures: {
++        title: "المحاضرات",
++        description:
++          "محاضرات ولقاءات علمية ودعوية للشيخ لا تندرج ضمن السلاسل العلمية.",
++      },
++      words: {
++        title: "الكلمات الدعوية",
++        description: "كلمات موجزة وتوجيهات نافعة للشيخ مع مشغّل واضح للفيديو.",
++      },
++      shorts: {
++        title: "المقاطع القصيرة",
++        description: "فوائد مختصرة ومقاطع قصيرة منتقاة من محتوى الشيخ.",
++      },
++      recitations: {
++        title: "متفرقات",
++        description: "تلاوات وخطب وكتب وملفات ومواد متفرقة.",
++      },
++      schedule: {
++        title: "جدول المحاضرات والدروس",
++        description: "مواعيد الدروس والمحاضرات والأنشطة القادمة.",
++      },
++      contact: {
++        title: "تواصل معنا",
++        description: "القنوات الرسمية للتواصل ومتابعة محتوى الشيخ.",
++      },
++    },
+   },
+ };
+ 
