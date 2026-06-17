@@ -1,0 +1,20 @@
+a3043c1 Add unified Sheikh site dev runner
+10f7e1f Add protected admin login flow
+6bb70f1 Add admin auth and database schema foundation
+fbfae70 Temporarily prevent site indexing
+0a24f57 Published your App
+1868746 Published your App
+1e7d55f Fix site build and security audit issues
+f03c3a5 Update home page and header date display
+067c2e1 Update home page sections
+b566836 Add miscellaneous content page
+e01cc4b Add miscellaneous page and navigation link
+4e570f5 Improve schedule page content-first layout
+55d971f Improve shorts page content-first layout
+90903c0 Update shorts page layout for video display
+7059fb9 Improve words viewer page
+d009a1a Improve lectures viewer page
+7d2017f Add series videos model and improve lessons viewer
+a7638cb Update contact page with disabled secure form
+23b11c3 Add upcoming activity item and remove recitations route
+f305556 Add published schedule item for upcoming activity

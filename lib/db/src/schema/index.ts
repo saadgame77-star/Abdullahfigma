@@ -752,3 +752,49 @@ export const aiSuggestionsRelations = relations(aiSuggestions, ({ one }) => ({
     references: [adminUsers.id],
   }),
 }));
+
+// Site content is stored as a single opaque JSON document (texts, theme,
+// navigation, footer, SEO, ...). The server treats it as a black box; the
+// frontend owns the document shape and merges it over built-in defaults.
+// A singleton row holds the working draft and the published snapshot.
+export const siteContent = pgTable("site_content", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  draft: jsonb("draft")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default(sql`'{}'::jsonb`),
+  published: jsonb("published")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default(sql`'{}'::jsonb`),
+  draftUpdatedAt: timestamp("draft_updated_at", { withTimezone: true }),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  updatedByUserId: uuid("updated_by_user_id").references(() => adminUsers.id, {
+    onDelete: "set null",
+  }),
+  createdAt: now(),
+  updatedAt: updatedAt(),
+});
+
+// Immutable snapshots written on every publish, enabling restore/rollback.
+export const siteContentVersions = pgTable(
+  "site_content_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    snapshot: jsonb("snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    label: text("label"),
+    createdByUserId: uuid("created_by_user_id").references(
+      () => adminUsers.id,
+      { onDelete: "set null" },
+    ),
+    createdAt: now(),
+  },
+  (table) => ({
+    createdAtIdx: index("site_content_versions_created_at_idx").on(
+      table.createdAt,
+    ),
+  }),
+);

@@ -32,6 +32,7 @@ import { ShortsManager } from "../components/admin/ShortsManager";
 import { CategoriesManager } from "../components/admin/CategoriesManager";
 import { TagsManager } from "../components/admin/TagsManager";
 import { SupervisorsManager } from "../components/admin/SupervisorsManager";
+import { SiteContentManager } from "../components/admin/SiteContentManager";
 import { ScheduleManager } from "../components/admin/ScheduleManager";
 import { MiscManager } from "../components/admin/MiscManager";
 import { adminApi, type AdminStats } from "../lib/adminApi";
@@ -518,36 +519,7 @@ export function Admin({ currentUser }: { currentUser?: CurrentAdmin }) {
               <SupervisorsManager onMutate={refreshStats} />
             )}
 
-            {activeSection === "settings" && (
-              <section className="p-5">
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <div className="rounded-sm border border-gray-200 p-5">
-                    <div className="mb-3 flex items-center gap-2">
-                      <SlidersHorizontal className="h-5 w-5 text-[var(--color-islamic-gold)]" />
-                      <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-                        إعدادات العرض
-                      </h3>
-                    </div>
-                    <p className="text-gray-600">
-                      التحكم في ترتيب الأقسام، وإظهار أو إخفاء بعض الصفحات،
-                      وتعديل العبارات العامة في الموقع.
-                    </p>
-                  </div>
-
-                  <div className="rounded-sm border border-gray-200 p-5">
-                    <div className="mb-3 flex items-center gap-2">
-                      <Mail className="h-5 w-5 text-[var(--color-islamic-gold)]" />
-                      <h3 className="font-serif text-2xl font-bold text-[var(--color-islamic-green-dark)]">
-                        بيانات التواصل
-                      </h3>
-                    </div>
-                    <p className="text-gray-600">
-                      إدارة روابط القنوات الرسمية ووسائل التواصل ونماذج الاتصال.
-                    </p>
-                  </div>
-                </div>
-              </section>
-            )}
+            {activeSection === "settings" && <SiteContentManager />}
           </main>
         </div>
 

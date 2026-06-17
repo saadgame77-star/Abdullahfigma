@@ -10,7 +10,8 @@ import {
   Mic2,
   Library,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { useSiteContent } from "./SiteContentProvider";
 
 function useTodayDates() {
   return useMemo(() => {
@@ -42,48 +43,29 @@ function useTodayDates() {
   }, []);
 }
 
+const navIcons: Record<string, ReactNode> = {
+  "/": <BookOpen className="w-4 h-4" />,
+  "/lessons": <BookOpen className="w-4 h-4" />,
+  "/lectures": <Mic2 className="w-4 h-4" />,
+  "/words": <MessageCircle className="w-4 h-4" />,
+  "/shorts": <Video className="w-4 h-4" />,
+  "/recitations": <Library className="w-4 h-4" />,
+  "/schedule": <CalendarDays className="w-4 h-4" />,
+  "/contact": <Phone className="w-4 h-4" />,
+};
+
 export function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { hijri, gregorian } = useTodayDates();
+  const content = useSiteContent();
 
-  const navLinks = [
-    { name: "الرئيسية", path: "/", icon: <BookOpen className="w-4 h-4" /> },
-    {
-      name: "الدروس العلمية",
-      path: "/lessons",
-      icon: <BookOpen className="w-4 h-4" />,
-    },
-    {
-      name: "المحاضرات",
-      path: "/lectures",
-      icon: <Mic2 className="w-4 h-4" />,
-    },
-    {
-      name: "الكلمات الدعوية",
-      path: "/words",
-      icon: <MessageCircle className="w-4 h-4" />,
-    },
-    {
-      name: "المقاطع القصيرة",
-      path: "/shorts",
-      icon: <Video className="w-4 h-4" />,
-    },
-    {
-      name: "متفرقات",
-      path: "/recitations",
-      icon: <Library className="w-4 h-4" />,
-    },
-    {
-      name: "جدول المحاضرات والدروس",
-      path: "/schedule",
-      icon: <CalendarDays className="w-4 h-4" />,
-    },
-    {
-      name: "تواصل معنا",
-      path: "/contact",
-      icon: <Phone className="w-4 h-4" />,
-    },
-  ];
+  const navLinks = content.nav.items.map((item) => ({
+    name: item.label,
+    path: item.href,
+    icon: navIcons[item.href] ?? <BookOpen className="w-4 h-4" />,
+  }));
+
+  const year = new Date().getFullYear();
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-[var(--color-islamic-ivory)]">
@@ -98,7 +80,7 @@ export function Layout() {
             >
               <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45 group-hover:rotate-0 transition-transform duration-500 shadow-lg border-2 border-[var(--color-islamic-green)] outline outline-1 outline-[var(--color-islamic-gold)]">
                 <span className="font-serif text-2xl sm:text-3xl text-[var(--color-islamic-green)] -rotate-45 group-hover:rotate-0 transition-transform duration-500 font-bold">
-                  ع
+                  {content.brand.logoText}
                 </span>
               </div>
 
@@ -107,14 +89,14 @@ export function Layout() {
                   className="font-sans text-[var(--color-islamic-gold)] font-medium tracking-wider"
                   style={{ fontSize: "clamp(0.65rem, 2.2vw, 1rem)" }}
                 >
-                  الموقع الرسمي للشيخ
+                  {content.brand.siteSubtitle}
                 </span>
 
                 <h1
                   className="font-serif font-bold tracking-wide text-white"
                   style={{ fontSize: "clamp(1rem, 5vw, 2.25rem)" }}
                 >
-                  عبدالله بن سعد آل غلفيص
+                  {content.brand.siteTitle}
                 </h1>
               </div>
             </Link>
@@ -224,112 +206,64 @@ export function Layout() {
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45">
                   <span className="font-serif text-xl text-[var(--color-islamic-green-dark)] -rotate-45 font-bold">
-                    ع
+                    {content.brand.logoText}
                   </span>
                 </div>
 
                 <h2 className="font-serif text-2xl text-white">
-                  الشيخ عبدالله آل غلفيص
+                  {content.footer.title}
                 </h2>
               </div>
 
               <p className="leading-relaxed text-sm opacity-80 max-w-sm">
-                منصة علمية تعنى بنشر السلاسل العلمية، والمحاضرات، والكلمات
-                الدعوية، والمقاطع القصيرة، والمواد المتفرقة، لتكون مرجعًا منظمًا
-                لطالبي العلم.
+                {content.footer.description}
               </p>
             </div>
 
             <div>
               <h3 className="font-serif text-xl text-[var(--color-islamic-gold)] mb-6 border-b border-[var(--color-islamic-green-light)] pb-3 inline-block">
-                روابط سريعة
+                {content.footer.quickLinksTitle}
               </h3>
 
               <ul className="space-y-3">
-                <li>
-                  <Link
-                    to="/lessons"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    الدروس العلمية
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/lectures"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    المحاضرات
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/words"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    الكلمات الدعوية
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/shorts"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    المقاطع القصيرة
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/recitations"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    متفرقات
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/schedule"
-                    className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[var(--color-islamic-gold)]">▪</span>
-                    جدول المحاضرات والدروس
-                  </Link>
-                </li>
+                {content.footer.quickLinks.map((link) => (
+                  <li key={`${link.href}-${link.label}`}>
+                    <Link
+                      to={link.href}
+                      className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                    >
+                      <span className="text-[var(--color-islamic-gold)]">▪</span>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
             <div>
               <h3 className="font-serif text-xl text-[var(--color-islamic-gold)] mb-6 border-b border-[var(--color-islamic-green-light)] pb-3 inline-block">
-                تواصل معنا
+                {content.footer.contactTitle}
               </h3>
 
               <p className="text-sm opacity-80 mb-4">
-                يسعدنا تواصلكم واستقبال مقترحاتكم عبر القنوات الرسمية.
+                {content.footer.contactMessage}
               </p>
 
               <Link
                 to="/contact"
                 className="inline-block bg-[var(--color-islamic-gold)] text-[var(--color-islamic-green-dark)] px-6 py-2 rounded-sm font-medium hover:bg-white transition-colors"
               >
-                صفحة التواصل
+                {content.footer.contactButton}
               </Link>
             </div>
           </div>
 
           <div className="border-t border-[var(--color-islamic-green-light)] pt-8 flex flex-col md:flex-row justify-between items-center text-sm opacity-70">
-            <p>
-              جميع الحقوق محفوظة للموقع الرسمي للشيخ عبدالله بن سعد آل غلفيص ©{" "}
-              {new Date().getFullYear()}
-            </p>
+            <p>{content.footer.copyright.replace("{year}", String(year))}</p>
 
             <div className="mt-4 md:mt-0">
               <span className="font-serif text-[var(--color-islamic-gold)]">
-                « وفوق كل ذي علم عليم »
+                {content.footer.quote}
               </span>
             </div>
           </div>

@@ -1,6 +1,11 @@
 import { RouterProvider } from 'react-router';
+import { SiteContentProvider } from './components/SiteContentProvider';
 import { router } from './routes';
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <SiteContentProvider>
+      <RouterProvider router={router} />
+    </SiteContentProvider>
+  );
 }

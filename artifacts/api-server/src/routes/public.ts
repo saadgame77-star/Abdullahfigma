@@ -11,6 +11,7 @@ import {
   scientificSeries,
   seriesVideos,
   shortClips,
+  siteContent,
   words,
 } from "@workspace/db";
 import { logger } from "../lib/logger";
@@ -383,6 +384,19 @@ router.get("/misc", async (_request: Request, response: Response) => {
   } catch (error) {
     logger.error({ err: error }, "Public misc read failed");
     fail(response, "تعذر تحميل المتفرقات.");
+  }
+});
+
+// GET /api/public/site-content — the published site content document.
+// Returns an empty object when nothing has been published yet; the frontend
+// merges this over its built-in defaults.
+router.get("/site-content", async (_request: Request, response: Response) => {
+  try {
+    const [row] = await db.select().from(siteContent).limit(1);
+    response.json({ ok: true, content: row?.published ?? {} });
+  } catch (error) {
+    logger.error({ err: error }, "Public site content read failed");
+    fail(response, "تعذر تحميل محتوى الموقع.");
   }
 });
 

@@ -17,6 +17,7 @@ import {
   type PublicWord,
 } from "../lib/publicApi";
 import { usePublicData } from "../lib/usePublicData";
+import { useSiteContent } from "../components/SiteContentProvider";
 
 type ContentType = "سلسلة" | "محاضرة" | "كلمة";
 
@@ -198,6 +199,7 @@ function SectionHeading({ eyebrow, title, to }: SectionHeadingProps) {
 }
 
 export function Home() {
+  const home = useSiteContent().pages.home;
   const seriesData = usePublicData(publicApi.getSeries);
   const lecturesData = usePublicData(publicApi.getLectures);
   const wordsData = usePublicData(publicApi.getWords);
@@ -246,19 +248,17 @@ export function Home() {
             <div className="text-right">
               <p className="mb-4 inline-flex items-center gap-2 text-sm font-bold tracking-wide text-[var(--color-islamic-gold)]">
                 <span className="h-px w-8 bg-[var(--color-islamic-gold)]" />
-                بوابة علمية شرعية
+                {home.hero.eyebrow}
               </p>
 
               <h1 className="mb-5 font-serif text-3xl font-bold leading-[1.4] text-[var(--color-islamic-green-dark)] sm:text-4xl md:text-[2.45rem]">
-                دروس الشيخ ومحاضراته وكلماته
+                {home.hero.titleLine1}
                 <br />
-                في موضعٍ واحد منظّم
+                {home.hero.titleLine2}
               </h1>
 
               <p className="max-w-2xl text-base leading-loose text-gray-600 sm:text-lg">
-                جمعٌ يعتني به نفرٌ من طلاب الشيخ، يضمّ سلاسله العلمية ومحاضراته
-                وكلماته الدعوية وفوائده القصيرة، مرتّبةً وفق أبواب العلم تيسيرًا
-                على طالب العلم.
+                {home.hero.subtitle}
               </p>
             </div>
 
@@ -337,8 +337,8 @@ export function Home() {
       <section className="bg-white/60 py-14">
         <div className="container mx-auto px-4">
           <SectionHeading
-            eyebrow="المحتوى العلمي"
-            title="أحدث المحاضرات والدروس المنشورة"
+            eyebrow={home.latest.eyebrow}
+            title={home.latest.heading}
             to="/lessons"
           />
 
@@ -428,14 +428,14 @@ export function Home() {
                     to="/lessons"
                     className="flex h-full items-center justify-center rounded-sm border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500 transition-colors hover:border-[var(--color-islamic-gold)]"
                   >
-                    تصفّح بقية المحتوى العلمي داخل الموقع
+                    {home.latest.browseAll}
                   </Link>
                 )}
               </div>
             </div>
           ) : (
             <div className="rounded-sm border border-gray-200 bg-white p-8 text-center text-gray-500">
-              لا يوجد محتوى منشور إضافي حاليًا.
+              {home.latest.empty}
             </div>
           )}
         </div>
@@ -445,8 +445,8 @@ export function Home() {
       {featuredShorts.length > 0 && (
         <section className="container mx-auto px-4 py-14">
           <SectionHeading
-            eyebrow="فوائد مختصرة"
-            title="أحدث المقاطع القصيرة"
+            eyebrow={home.shorts.eyebrow}
+            title={home.shorts.heading}
             to="/shorts"
           />
 
@@ -496,11 +496,11 @@ export function Home() {
         <div className="container mx-auto px-4">
           <div className="mb-8 text-center">
             <p className="mb-1 text-sm font-medium text-[var(--color-islamic-gold)]">
-              المحتوى في أرقام
+              {home.stats.eyebrow}
             </p>
 
             <h2 className="font-serif text-2xl font-bold text-white sm:text-3xl">
-              نظرة على ما يضمّه الموقع
+              {home.stats.title}
             </h2>
           </div>
 
