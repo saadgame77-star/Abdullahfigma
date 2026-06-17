@@ -9,6 +9,7 @@ import {
   Rocket,
   Save,
   Trash2,
+  Upload,
 } from "lucide-react";
 import {
   useCallback,
@@ -338,8 +339,8 @@ export function SiteContentManager() {
               value={content.brand.logoText}
               onChange={(v) => edit((d) => (d.brand.logoText = v))}
             />
-            <TextField
-              label="رابط صورة الشعار (اختياري)"
+            <ImageField
+              label="صورة الشعار (اختياري — ارفع أو ألصق رابطًا)"
               value={content.brand.logoUrl}
               onChange={(v) => edit((d) => (d.brand.logoUrl = v))}
             />
@@ -556,8 +557,8 @@ export function SiteContentManager() {
                 edit((d) => (d.pages.schedule.searchPlaceholder = v))
               }
             />
-            <TextField
-              label="رابط صورة الإعلان الرسمي (اختياري)"
+            <ImageField
+              label="صورة الإعلان الرسمي (اختياري — ارفع أو ألصق رابطًا)"
               value={content.pages.schedule.announcementImageUrl}
               onChange={(v) =>
                 edit((d) => (d.pages.schedule.announcementImageUrl = v))
@@ -891,6 +892,92 @@ function TextArea({
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
+  );
+}
+
+function ImageField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const inputId = `upload-${label}`;
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleFile(file: File | undefined) {
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const { url } = await siteContentApi.uploadImage(file);
+      onChange(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر رفع الصورة.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <span className="mb-1 block text-xs font-bold text-gray-600">{label}</span>
+      <div className="flex items-center gap-2">
+        {value ? (
+          <img
+            src={value}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-sm border border-gray-200 object-contain"
+          />
+        ) : (
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-dashed border-gray-300 text-gray-300">
+            <Upload className="h-5 w-5" />
+          </span>
+        )}
+        <input
+          className={`${inputClass} flex-1`}
+          value={value}
+          placeholder="رابط الصورة أو ارفع ملفًا"
+          dir="ltr"
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <label
+          htmlFor={inputId}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
+          رفع
+        </label>
+        <input
+          id={inputId}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            void handleFile(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="rounded-sm p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+            aria-label="إزالة"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
   );
 }
 

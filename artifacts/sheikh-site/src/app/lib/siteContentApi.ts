@@ -74,4 +74,27 @@ export const siteContentApi = {
       { method: "POST" },
     );
   },
+
+  // Uploads an image (raw binary body) and returns its public URL.
+  async uploadImage(file: File): Promise<{ url: string; name: string }> {
+    const response = await fetch(
+      `/api/admin/uploads?filename=${encodeURIComponent(file.name)}`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": file.type || "application/octet-stream",
+        },
+        body: file,
+      },
+    );
+    const data = (await response.json().catch(() => null)) as
+      | { ok?: boolean; url?: string; name?: string; message?: string }
+      | null;
+    if (!response.ok || !data?.ok || !data.url) {
+      throw new Error(data?.message ?? "UPLOAD_FAILED");
+    }
+    return { url: data.url, name: data.name ?? "" };
+  },
 };
