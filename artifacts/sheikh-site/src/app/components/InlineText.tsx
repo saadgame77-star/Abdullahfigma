@@ -41,6 +41,10 @@ export function InlineText({
       data-edit-path={path}
       contentEditable
       suppressContentEditableWarning
+      onClick={(event: React.MouseEvent<HTMLElement>) => {
+        // Prevent navigation when the editable text lives inside a link.
+        event.preventDefault();
+      }}
       onBlur={(event: React.FocusEvent<HTMLElement>) => {
         const text = event.currentTarget.textContent ?? "";
         if (text !== value) {

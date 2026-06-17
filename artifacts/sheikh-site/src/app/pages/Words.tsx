@@ -12,6 +12,7 @@ import {
 import { useMemo, useState } from "react";
 import { publicApi } from "../lib/publicApi";
 import { useSiteContent } from "../components/SiteContentProvider";
+import { InlineText } from "../components/InlineText";
 import { usePublicData } from "../lib/usePublicData";
 
 export function Words() {
@@ -98,18 +99,24 @@ export function Words() {
           <div className="max-w-4xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-ivory)] border border-gray-200 px-4 py-2 text-sm font-bold text-[var(--color-islamic-green)] mb-5">
               <MessageCircle className="w-4 h-4 text-[var(--color-islamic-gold)]" />
-              {page.badge}
+              <InlineText path="pages.words.badge" value={page.badge} />
             </span>
 
-            <h1 className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5">
-              {page.title}
-            </h1>
+            <InlineText
+              as="h1"
+              className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5"
+              path="pages.words.title"
+              value={page.title}
+            />
 
             <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
 
-            <p className="text-gray-600 leading-relaxed text-lg">
-              {page.description}
-            </p>
+            <InlineText
+              as="p"
+              className="text-gray-600 leading-relaxed text-lg"
+              path="pages.words.description"
+              value={page.description}
+            />
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-12">

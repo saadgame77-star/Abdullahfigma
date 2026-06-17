@@ -7,6 +7,7 @@ import {
   type ShortFitMode,
 } from "../lib/publicApi";
 import { useSiteContent } from "../components/SiteContentProvider";
+import { InlineText } from "../components/InlineText";
 import { usePublicData } from "../lib/usePublicData";
 
 type ShortClip = PublicShort;
@@ -204,9 +205,12 @@ export function Shorts() {
       <section className="container mx-auto px-4 py-6">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
-              {page.title}
-            </h1>
+            <InlineText
+              as="h1"
+              className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl"
+              path="pages.shorts.title"
+              value={page.title}
+            />
             <div className="mt-3 h-1 w-20 bg-[var(--color-islamic-gold)]" />
           </div>
 

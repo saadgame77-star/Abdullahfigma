@@ -50,6 +50,16 @@ const COLOR_FIELDS: { key: keyof SiteContent["theme"]["colors"]; label: string }
     { key: "text", label: "لون النص" },
   ];
 
+const TABS: { id: string; label: string }[] = [
+  { id: "appearance", label: "المظهر" },
+  { id: "brand", label: "العلامة" },
+  { id: "nav", label: "القائمة" },
+  { id: "home", label: "الرئيسية" },
+  { id: "pages", label: "الصفحات" },
+  { id: "footer", label: "التذييل" },
+  { id: "seo", label: "SEO" },
+];
+
 const SEO_PAGES: { key: SeoPageKey; label: string }[] = [
   { key: "home", label: "الرئيسية" },
   { key: "lessons", label: "الدروس العلمية" },
@@ -84,6 +94,7 @@ export function SiteContentManager() {
 
   const [versions, setVersions] = useState<SiteContentVersion[]>([]);
   const [versionsOpen, setVersionsOpen] = useState(false);
+  const [tab, setTab] = useState("appearance");
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const previewReady = useRef(false);
@@ -342,7 +353,24 @@ export function SiteContentManager() {
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         {/* Editor */}
         <div className="space-y-3">
-          <Group title="المظهر — الألوان والخطوط" defaultOpen>
+          <div className="flex flex-wrap gap-2 rounded-sm border border-gray-200 bg-white p-2">
+            {TABS.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => setTab(entry.id)}
+                className={`rounded-sm px-3 py-1.5 text-sm font-bold transition-colors ${
+                  tab === entry.id
+                    ? "bg-[var(--color-islamic-green)] text-white"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
+
+          <Group tab={tab} id="appearance" title="المظهر — الألوان والخطوط" defaultOpen>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {COLOR_FIELDS.map((field) => (
                 <ColorField
@@ -371,7 +399,7 @@ export function SiteContentManager() {
             </div>
           </Group>
 
-          <Group title="العلامة (الترويسة)">
+          <Group tab={tab} id="brand" title="العلامة (الترويسة)" defaultOpen>
             <TextField
               label="حرف/رمز الشعار (يظهر إن لم تضع صورة)"
               value={content.brand.logoText}
@@ -394,14 +422,14 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="قائمة التنقل">
+          <Group tab={tab} id="nav" title="قائمة التنقل" defaultOpen>
             <LinkListEditor
               items={content.nav.items}
               onChange={(items) => edit((d) => (d.nav.items = items))}
             />
           </Group>
 
-          <Group title="الصفحة الرئيسية">
+          <Group tab={tab} id="home" title="الصفحة الرئيسية" defaultOpen>
             <SubTitle>القسم العلوي (Hero)</SubTitle>
             <TextField
               label="السطر التمهيدي"
@@ -529,7 +557,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="صفحة: الدروس العلمية">
+          <Group tab={tab} id="pages" title="صفحة: الدروس العلمية">
             <TextField
               label="الشارة"
               value={content.pages.lessons.badge}
@@ -554,7 +582,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="صفحة: المحاضرات">
+          <Group tab={tab} id="pages" title="صفحة: المحاضرات">
             <TextField
               label="الشارة"
               value={content.pages.lectures.badge}
@@ -579,7 +607,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="صفحة: الكلمات الدعوية">
+          <Group tab={tab} id="pages" title="صفحة: الكلمات الدعوية">
             <TextField
               label="الشارة"
               value={content.pages.words.badge}
@@ -604,7 +632,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="صفحة: المقاطع القصيرة">
+          <Group tab={tab} id="pages" title="صفحة: المقاطع القصيرة">
             <TextField
               label="العنوان"
               value={content.pages.shorts.title}
@@ -619,7 +647,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="صفحة: المتفرقات">
+          <Group tab={tab} id="pages" title="صفحة: المتفرقات">
             <TextField
               label="العنوان"
               value={content.pages.recitations.title}
@@ -634,7 +662,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="صفحة: الجدول">
+          <Group tab={tab} id="pages" title="صفحة: الجدول">
             <TextField
               label="العنوان"
               value={content.pages.schedule.title}
@@ -656,7 +684,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="صفحة: تواصل معنا">
+          <Group tab={tab} id="pages" title="صفحة: تواصل معنا">
             <TextField
               label="العنوان"
               value={content.pages.contact.title}
@@ -784,7 +812,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="التذييل">
+          <Group tab={tab} id="footer" title="التذييل" defaultOpen>
             <TextField
               label="عنوان التذييل"
               value={content.footer.title}
@@ -831,7 +859,7 @@ export function SiteContentManager() {
             />
           </Group>
 
-          <Group title="SEO ومحركات البحث">
+          <Group tab={tab} id="seo" title="SEO ومحركات البحث" defaultOpen>
             <label className="flex items-center gap-2 rounded-sm border border-gray-200 bg-gray-50 p-3 text-sm font-medium text-gray-700">
               <input
                 type="checkbox"
@@ -909,12 +937,17 @@ function Group({
   title,
   children,
   defaultOpen = false,
+  tab,
+  id,
 }: {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  tab?: string;
+  id?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  if (tab !== undefined && tab !== id) return null;
   return (
     <div className="rounded-sm border border-gray-200 bg-white">
       <button

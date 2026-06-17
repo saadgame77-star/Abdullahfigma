@@ -6,6 +6,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useSiteContent } from "../components/SiteContentProvider";
+import { InlineText } from "../components/InlineText";
 
 export function Contact() {
   const page = useSiteContent().pages.contact;
@@ -15,13 +16,19 @@ export function Contact() {
   return (
     <div className="container mx-auto px-4 py-12 animate-in fade-in duration-500">
       <div className="mb-10 text-center">
-        <h1 className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4">
-          {page.title}
-        </h1>
+        <InlineText
+          as="h1"
+          className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4"
+          path="pages.contact.title"
+          value={page.title}
+        />
         <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
-        <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          {page.intro}
-        </p>
+        <InlineText
+          as="p"
+          className="text-gray-600 max-w-3xl mx-auto leading-relaxed"
+          path="pages.contact.intro"
+          value={page.intro}
+        />
       </div>
 
       <div className="max-w-6xl mx-auto space-y-8">

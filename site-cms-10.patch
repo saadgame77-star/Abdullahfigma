@@ -1,0 +1,487 @@
+diff --git a/artifacts/sheikh-site/src/app/components/InlineText.tsx b/artifacts/sheikh-site/src/app/components/InlineText.tsx
+index 1883698..9a7f59e 100644
+--- a/artifacts/sheikh-site/src/app/components/InlineText.tsx
++++ b/artifacts/sheikh-site/src/app/components/InlineText.tsx
+@@ -41,6 +41,10 @@ export function InlineText({
+       data-edit-path={path}
+       contentEditable
+       suppressContentEditableWarning
++      onClick={(event: React.MouseEvent<HTMLElement>) => {
++        // Prevent navigation when the editable text lives inside a link.
++        event.preventDefault();
++      }}
+       onBlur={(event: React.FocusEvent<HTMLElement>) => {
+         const text = event.currentTarget.textContent ?? "";
+         if (text !== value) {
+diff --git a/artifacts/sheikh-site/src/app/components/Layout.tsx b/artifacts/sheikh-site/src/app/components/Layout.tsx
+index dee75e9..5cdfed9 100644
+--- a/artifacts/sheikh-site/src/app/components/Layout.tsx
++++ b/artifacts/sheikh-site/src/app/components/Layout.tsx
+@@ -142,7 +142,11 @@ export function Layout() {
+                   }
+                 >
+                   <span className="hidden xl:inline-flex">{link.icon}</span>
+-                  <span>{link.name}</span>
++                  <InlineText
++                    as="span"
++                    path={`nav.items.${content.nav.items.findIndex((i) => i.href === link.path)}.label`}
++                    value={link.name}
++                  />
+                 </NavLink>
+               ))}
+             </div>
+@@ -253,14 +257,18 @@ export function Layout() {
+               </h3>
+ 
+               <ul className="space-y-3">
+-                {content.footer.quickLinks.map((link) => (
++                {content.footer.quickLinks.map((link, index) => (
+                   <li key={`${link.href}-${link.label}`}>
+                     <Link
+                       to={link.href}
+                       className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
+                     >
+                       <span className="text-[var(--color-islamic-gold)]">▪</span>
+-                      {link.label}
++                      <InlineText
++                        as="span"
++                        path={`footer.quickLinks.${index}.label`}
++                        value={link.label}
++                      />
+                     </Link>
+                   </li>
+                 ))}
+diff --git a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+index 219ccba..36eab92 100644
+--- a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
++++ b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+@@ -50,6 +50,16 @@ const COLOR_FIELDS: { key: keyof SiteContent["theme"]["colors"]; label: string }
+     { key: "text", label: "لون النص" },
+   ];
+ 
++const TABS: { id: string; label: string }[] = [
++  { id: "appearance", label: "المظهر" },
++  { id: "brand", label: "العلامة" },
++  { id: "nav", label: "القائمة" },
++  { id: "home", label: "الرئيسية" },
++  { id: "pages", label: "الصفحات" },
++  { id: "footer", label: "التذييل" },
++  { id: "seo", label: "SEO" },
++];
++
+ const SEO_PAGES: { key: SeoPageKey; label: string }[] = [
+   { key: "home", label: "الرئيسية" },
+   { key: "lessons", label: "الدروس العلمية" },
+@@ -84,6 +94,7 @@ export function SiteContentManager() {
+ 
+   const [versions, setVersions] = useState<SiteContentVersion[]>([]);
+   const [versionsOpen, setVersionsOpen] = useState(false);
++  const [tab, setTab] = useState("appearance");
+ 
+   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+   const previewReady = useRef(false);
+@@ -342,7 +353,24 @@ export function SiteContentManager() {
+       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+         {/* Editor */}
+         <div className="space-y-3">
+-          <Group title="المظهر — الألوان والخطوط" defaultOpen>
++          <div className="flex flex-wrap gap-2 rounded-sm border border-gray-200 bg-white p-2">
++            {TABS.map((entry) => (
++              <button
++                key={entry.id}
++                type="button"
++                onClick={() => setTab(entry.id)}
++                className={`rounded-sm px-3 py-1.5 text-sm font-bold transition-colors ${
++                  tab === entry.id
++                    ? "bg-[var(--color-islamic-green)] text-white"
++                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
++                }`}
++              >
++                {entry.label}
++              </button>
++            ))}
++          </div>
++
++          <Group tab={tab} id="appearance" title="المظهر — الألوان والخطوط" defaultOpen>
+             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+               {COLOR_FIELDS.map((field) => (
+                 <ColorField
+@@ -371,7 +399,7 @@ export function SiteContentManager() {
+             </div>
+           </Group>
+ 
+-          <Group title="العلامة (الترويسة)">
++          <Group tab={tab} id="brand" title="العلامة (الترويسة)" defaultOpen>
+             <TextField
+               label="حرف/رمز الشعار (يظهر إن لم تضع صورة)"
+               value={content.brand.logoText}
+@@ -394,14 +422,14 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="قائمة التنقل">
++          <Group tab={tab} id="nav" title="قائمة التنقل" defaultOpen>
+             <LinkListEditor
+               items={content.nav.items}
+               onChange={(items) => edit((d) => (d.nav.items = items))}
+             />
+           </Group>
+ 
+-          <Group title="الصفحة الرئيسية">
++          <Group tab={tab} id="home" title="الصفحة الرئيسية" defaultOpen>
+             <SubTitle>القسم العلوي (Hero)</SubTitle>
+             <TextField
+               label="السطر التمهيدي"
+@@ -529,7 +557,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="صفحة: الدروس العلمية">
++          <Group tab={tab} id="pages" title="صفحة: الدروس العلمية">
+             <TextField
+               label="الشارة"
+               value={content.pages.lessons.badge}
+@@ -554,7 +582,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="صفحة: المحاضرات">
++          <Group tab={tab} id="pages" title="صفحة: المحاضرات">
+             <TextField
+               label="الشارة"
+               value={content.pages.lectures.badge}
+@@ -579,7 +607,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="صفحة: الكلمات الدعوية">
++          <Group tab={tab} id="pages" title="صفحة: الكلمات الدعوية">
+             <TextField
+               label="الشارة"
+               value={content.pages.words.badge}
+@@ -604,7 +632,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="صفحة: المقاطع القصيرة">
++          <Group tab={tab} id="pages" title="صفحة: المقاطع القصيرة">
+             <TextField
+               label="العنوان"
+               value={content.pages.shorts.title}
+@@ -619,7 +647,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="صفحة: المتفرقات">
++          <Group tab={tab} id="pages" title="صفحة: المتفرقات">
+             <TextField
+               label="العنوان"
+               value={content.pages.recitations.title}
+@@ -634,7 +662,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="صفحة: الجدول">
++          <Group tab={tab} id="pages" title="صفحة: الجدول">
+             <TextField
+               label="العنوان"
+               value={content.pages.schedule.title}
+@@ -656,7 +684,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="صفحة: تواصل معنا">
++          <Group tab={tab} id="pages" title="صفحة: تواصل معنا">
+             <TextField
+               label="العنوان"
+               value={content.pages.contact.title}
+@@ -784,7 +812,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="التذييل">
++          <Group tab={tab} id="footer" title="التذييل" defaultOpen>
+             <TextField
+               label="عنوان التذييل"
+               value={content.footer.title}
+@@ -831,7 +859,7 @@ export function SiteContentManager() {
+             />
+           </Group>
+ 
+-          <Group title="SEO ومحركات البحث">
++          <Group tab={tab} id="seo" title="SEO ومحركات البحث" defaultOpen>
+             <label className="flex items-center gap-2 rounded-sm border border-gray-200 bg-gray-50 p-3 text-sm font-medium text-gray-700">
+               <input
+                 type="checkbox"
+@@ -909,12 +937,17 @@ function Group({
+   title,
+   children,
+   defaultOpen = false,
++  tab,
++  id,
+ }: {
+   title: string;
+   children: ReactNode;
+   defaultOpen?: boolean;
++  tab?: string;
++  id?: string;
+ }) {
+   const [open, setOpen] = useState(defaultOpen);
++  if (tab !== undefined && tab !== id) return null;
+   return (
+     <div className="rounded-sm border border-gray-200 bg-white">
+       <button
+diff --git a/artifacts/sheikh-site/src/app/pages/Contact.tsx b/artifacts/sheikh-site/src/app/pages/Contact.tsx
+index 00ccef5..53361b5 100644
+--- a/artifacts/sheikh-site/src/app/pages/Contact.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Contact.tsx
+@@ -6,6 +6,7 @@ import {
+   ShieldCheck,
+ } from "lucide-react";
+ import { useSiteContent } from "../components/SiteContentProvider";
++import { InlineText } from "../components/InlineText";
+ 
+ export function Contact() {
+   const page = useSiteContent().pages.contact;
+@@ -15,13 +16,19 @@ export function Contact() {
+   return (
+     <div className="container mx-auto px-4 py-12 animate-in fade-in duration-500">
+       <div className="mb-10 text-center">
+-        <h1 className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4">
+-          {page.title}
+-        </h1>
++        <InlineText
++          as="h1"
++          className="font-serif text-4xl text-[var(--color-islamic-green-dark)] font-bold mb-4"
++          path="pages.contact.title"
++          value={page.title}
++        />
+         <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
+-        <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
+-          {page.intro}
+-        </p>
++        <InlineText
++          as="p"
++          className="text-gray-600 max-w-3xl mx-auto leading-relaxed"
++          path="pages.contact.intro"
++          value={page.intro}
++        />
+       </div>
+ 
+       <div className="max-w-6xl mx-auto space-y-8">
+diff --git a/artifacts/sheikh-site/src/app/pages/Lectures.tsx b/artifacts/sheikh-site/src/app/pages/Lectures.tsx
+index bb8b056..1c125bd 100644
+--- a/artifacts/sheikh-site/src/app/pages/Lectures.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Lectures.tsx
+@@ -12,6 +12,7 @@ import {
+ import { useMemo, useState } from "react";
+ import { publicApi } from "../lib/publicApi";
+ import { useSiteContent } from "../components/SiteContentProvider";
++import { InlineText } from "../components/InlineText";
+ import { usePublicData } from "../lib/usePublicData";
+ 
+ export function Lectures() {
+@@ -107,18 +108,24 @@ export function Lectures() {
+           <div className="max-w-4xl mx-auto text-center">
+             <span className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-ivory)] border border-gray-200 px-4 py-2 text-sm font-bold text-[var(--color-islamic-green)] mb-5">
+               <Mic2 className="w-4 h-4 text-[var(--color-islamic-gold)]" />
+-              {page.badge}
++              <InlineText path="pages.lectures.badge" value={page.badge} />
+             </span>
+ 
+-            <h1 className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5">
+-              {page.title}
+-            </h1>
++            <InlineText
++              as="h1"
++              className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5"
++              path="pages.lectures.title"
++              value={page.title}
++            />
+ 
+             <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
+ 
+-            <p className="text-gray-600 leading-relaxed text-lg">
+-              {page.description}
+-            </p>
++            <InlineText
++              as="p"
++              className="text-gray-600 leading-relaxed text-lg"
++              path="pages.lectures.description"
++              value={page.description}
++            />
+           </div>
+ 
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-12">
+diff --git a/artifacts/sheikh-site/src/app/pages/Lessons.tsx b/artifacts/sheikh-site/src/app/pages/Lessons.tsx
+index 18f8b0b..c7810c2 100644
+--- a/artifacts/sheikh-site/src/app/pages/Lessons.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Lessons.tsx
+@@ -12,6 +12,7 @@ import {
+ import { useMemo, useState } from "react";
+ import { publicApi } from "../lib/publicApi";
+ import { useSiteContent } from "../components/SiteContentProvider";
++import { InlineText } from "../components/InlineText";
+ import { usePublicData } from "../lib/usePublicData";
+ 
+ export function Lessons() {
+@@ -135,18 +136,24 @@ export function Lessons() {
+           <div className="max-w-4xl mx-auto text-center">
+             <span className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-ivory)] border border-gray-200 px-4 py-2 text-sm font-bold text-[var(--color-islamic-green)] mb-5">
+               <Library className="w-4 h-4 text-[var(--color-islamic-gold)]" />
+-              {page.badge}
++              <InlineText path="pages.lessons.badge" value={page.badge} />
+             </span>
+ 
+-            <h1 className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5">
+-              {page.title}
+-            </h1>
++            <InlineText
++              as="h1"
++              className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5"
++              path="pages.lessons.title"
++              value={page.title}
++            />
+ 
+             <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
+ 
+-            <p className="text-gray-600 leading-relaxed text-lg">
+-              {page.description}
+-            </p>
++            <InlineText
++              as="p"
++              className="text-gray-600 leading-relaxed text-lg"
++              path="pages.lessons.description"
++              value={page.description}
++            />
+           </div>
+ 
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+diff --git a/artifacts/sheikh-site/src/app/pages/Recitations.tsx b/artifacts/sheikh-site/src/app/pages/Recitations.tsx
+index f399966..0f640c2 100644
+--- a/artifacts/sheikh-site/src/app/pages/Recitations.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Recitations.tsx
+@@ -14,6 +14,7 @@ import {
+ import { useMemo, useState } from "react";
+ import { publicApi, type PublicMiscItem } from "../lib/publicApi";
+ import { useSiteContent } from "../components/SiteContentProvider";
++import { InlineText } from "../components/InlineText";
+ import { usePublicData } from "../lib/usePublicData";
+ 
+ type MiscItem = PublicMiscItem;
+@@ -135,9 +136,12 @@ export function Recitations() {
+       <section className="container mx-auto px-4 py-6">
+         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+           <div>
+-            <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
+-              {page.title}
+-            </h1>
++            <InlineText
++              as="h1"
++              className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl"
++              path="pages.recitations.title"
++              value={page.title}
++            />
+             <div className="mt-3 h-1 w-20 bg-[var(--color-islamic-gold)]" />
+           </div>
+ 
+diff --git a/artifacts/sheikh-site/src/app/pages/Schedule.tsx b/artifacts/sheikh-site/src/app/pages/Schedule.tsx
+index 12b28d9..6e0910d 100644
+--- a/artifacts/sheikh-site/src/app/pages/Schedule.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Schedule.tsx
+@@ -14,6 +14,7 @@ import {
+ import { useMemo, useState } from "react";
+ import { publicApi, type PublicScheduleItem } from "../lib/publicApi";
+ import { useSiteContent } from "../components/SiteContentProvider";
++import { InlineText } from "../components/InlineText";
+ import { usePublicData } from "../lib/usePublicData";
+ 
+ 
+@@ -133,9 +134,12 @@ export function Schedule() {
+       <section className="container mx-auto px-4 py-6">
+         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+           <div>
+-            <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
+-              {page.title}
+-            </h1>
++            <InlineText
++              as="h1"
++              className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl"
++              path="pages.schedule.title"
++              value={page.title}
++            />
+             <div className="mt-3 h-1 w-24 bg-[var(--color-islamic-gold)]" />
+           </div>
+ 
+diff --git a/artifacts/sheikh-site/src/app/pages/Shorts.tsx b/artifacts/sheikh-site/src/app/pages/Shorts.tsx
+index 1d10c36..7f4ca48 100644
+--- a/artifacts/sheikh-site/src/app/pages/Shorts.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Shorts.tsx
+@@ -7,6 +7,7 @@ import {
+   type ShortFitMode,
+ } from "../lib/publicApi";
+ import { useSiteContent } from "../components/SiteContentProvider";
++import { InlineText } from "../components/InlineText";
+ import { usePublicData } from "../lib/usePublicData";
+ 
+ type ShortClip = PublicShort;
+@@ -204,9 +205,12 @@ export function Shorts() {
+       <section className="container mx-auto px-4 py-6">
+         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+           <div>
+-            <h1 className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl">
+-              {page.title}
+-            </h1>
++            <InlineText
++              as="h1"
++              className="font-serif text-3xl font-bold text-[var(--color-islamic-green-dark)] sm:text-4xl"
++              path="pages.shorts.title"
++              value={page.title}
++            />
+             <div className="mt-3 h-1 w-20 bg-[var(--color-islamic-gold)]" />
+           </div>
+ 
+diff --git a/artifacts/sheikh-site/src/app/pages/Words.tsx b/artifacts/sheikh-site/src/app/pages/Words.tsx
+index ffb3874..11213e9 100644
+--- a/artifacts/sheikh-site/src/app/pages/Words.tsx
++++ b/artifacts/sheikh-site/src/app/pages/Words.tsx
+@@ -12,6 +12,7 @@ import {
+ import { useMemo, useState } from "react";
+ import { publicApi } from "../lib/publicApi";
+ import { useSiteContent } from "../components/SiteContentProvider";
++import { InlineText } from "../components/InlineText";
+ import { usePublicData } from "../lib/usePublicData";
+ 
+ export function Words() {
+@@ -98,18 +99,24 @@ export function Words() {
+           <div className="max-w-4xl mx-auto text-center">
+             <span className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-islamic-ivory)] border border-gray-200 px-4 py-2 text-sm font-bold text-[var(--color-islamic-green)] mb-5">
+               <MessageCircle className="w-4 h-4 text-[var(--color-islamic-gold)]" />
+-              {page.badge}
++              <InlineText path="pages.words.badge" value={page.badge} />
+             </span>
+ 
+-            <h1 className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5">
+-              {page.title}
+-            </h1>
++            <InlineText
++              as="h1"
++              className="font-serif text-4xl md:text-5xl text-[var(--color-islamic-green-dark)] font-bold mb-5"
++              path="pages.words.title"
++              value={page.title}
++            />
+ 
+             <div className="w-24 h-1 bg-[var(--color-islamic-gold)] mx-auto mb-6"></div>
+ 
+-            <p className="text-gray-600 leading-relaxed text-lg">
+-              {page.description}
+-            </p>
++            <InlineText
++              as="p"
++              className="text-gray-600 leading-relaxed text-lg"
++              path="pages.words.description"
++              value={page.description}
++            />
+           </div>
+ 
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-12">

@@ -142,7 +142,11 @@ export function Layout() {
                   }
                 >
                   <span className="hidden xl:inline-flex">{link.icon}</span>
-                  <span>{link.name}</span>
+                  <InlineText
+                    as="span"
+                    path={`nav.items.${content.nav.items.findIndex((i) => i.href === link.path)}.label`}
+                    value={link.name}
+                  />
                 </NavLink>
               ))}
             </div>
@@ -253,14 +257,18 @@ export function Layout() {
               </h3>
 
               <ul className="space-y-3">
-                {content.footer.quickLinks.map((link) => (
+                {content.footer.quickLinks.map((link, index) => (
                   <li key={`${link.href}-${link.label}`}>
                     <Link
                       to={link.href}
                       className="hover:text-[var(--color-islamic-gold-light)] transition-colors flex items-center gap-2"
                     >
                       <span className="text-[var(--color-islamic-gold)]">▪</span>
-                      {link.label}
+                      <InlineText
+                        as="span"
+                        path={`footer.quickLinks.${index}.label`}
+                        value={link.label}
+                      />
                     </Link>
                   </li>
                 ))}
