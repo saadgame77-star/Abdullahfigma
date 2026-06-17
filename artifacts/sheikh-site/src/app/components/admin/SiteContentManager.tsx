@@ -3,6 +3,7 @@ import {
   Eye,
   GripVertical,
   History,
+  Images,
   Loader2,
   Plus,
   RefreshCw,
@@ -10,6 +11,7 @@ import {
   Save,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import {
   useCallback,
@@ -907,6 +909,7 @@ function ImageField({
   const inputId = `upload-${label}`;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
@@ -955,6 +958,14 @@ function ImageField({
           )}
           رفع
         </label>
+        <button
+          type="button"
+          onClick={() => setLibraryOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-sm border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          <Images className="h-4 w-4" />
+          المكتبة
+        </button>
         <input
           id={inputId}
           type="file"
@@ -977,6 +988,119 @@ function ImageField({
         )}
       </div>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {libraryOpen && (
+        <MediaLibrary
+          onPick={(url) => {
+            onChange(url);
+            setLibraryOpen(false);
+          }}
+          onClose={() => setLibraryOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function MediaLibrary({
+  onPick,
+  onClose,
+}: {
+  onPick: (url: string) => void;
+  onClose: () => void;
+}) {
+  const [items, setItems] = useState<{ name: string; url: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await siteContentApi.listUploads();
+      setItems(res.items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر تحميل المكتبة.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function handleDelete(name: string) {
+    try {
+      await siteContentApi.deleteUpload(name);
+      setItems((prev) => prev.filter((it) => it.name !== name));
+    } catch {
+      setError("تعذر حذف الملف.");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 py-10">
+      <div className="w-full max-w-3xl rounded-sm border border-gray-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 p-4">
+          <h3 className="font-serif text-xl font-bold text-[var(--color-islamic-green-dark)]">
+            مكتبة الوسائط
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-sm p-2 text-gray-500 hover:bg-gray-100"
+            aria-label="إغلاق"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-4">
+          {loading ? (
+            <div className="p-8 text-center text-gray-500">
+              <Loader2 className="mx-auto h-6 w-6 animate-spin text-[var(--color-islamic-gold)]" />
+            </div>
+          ) : error ? (
+            <div className="rounded-sm border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          ) : items.length === 0 ? (
+            <p className="p-8 text-center text-gray-400">
+              لا توجد صور مرفوعة بعد. استخدم زر «رفع».
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {items.map((item) => (
+                <div
+                  key={item.name}
+                  className="group relative overflow-hidden rounded-sm border border-gray-200"
+                >
+                  <button
+                    type="button"
+                    onClick={() => onPick(item.url)}
+                    className="block aspect-square w-full bg-gray-50"
+                    title="اختيار"
+                  >
+                    <img
+                      src={item.url}
+                      alt={item.name}
+                      className="h-full w-full object-contain"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item.name)}
+                    className="absolute left-1 top-1 rounded-sm bg-white/90 p-1 text-gray-500 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+                    aria-label="حذف"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

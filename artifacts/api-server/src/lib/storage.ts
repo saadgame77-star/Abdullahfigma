@@ -74,3 +74,18 @@ export async function downloadImage(
   if (!result.ok) return null;
   return { buffer: result.value[0], mime: mimeForName(name) };
 }
+
+// Lists stored image objects (newest first; non-image objects are ignored).
+export async function listImages(): Promise<string[]> {
+  const result = await getClient().list();
+  if (!result.ok) throw new Error(errorMessage(result.error));
+  return result.value
+    .map((object) => object.name)
+    .filter((name) => mimeForName(name) !== "application/octet-stream")
+    .sort((a, b) => b.localeCompare(a));
+}
+
+export async function deleteImage(name: string): Promise<void> {
+  const result = await getClient().delete(name);
+  if (!result.ok) throw new Error(errorMessage(result.error));
+}

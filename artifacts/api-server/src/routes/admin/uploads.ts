@@ -2,11 +2,63 @@ import { Router, type Request, type Response, raw } from "express";
 import { requireAdminPermission } from "../../middleware/admin-auth";
 import { writeAuditLog } from "../../lib/audit";
 import { logger } from "../../lib/logger";
-import { extForMime, uploadImage } from "../../lib/storage";
+import {
+  deleteImage,
+  extForMime,
+  isSafeObjectName,
+  listImages,
+  uploadImage,
+} from "../../lib/storage";
 
 const router = Router();
 
 router.use(requireAdminPermission("editSettings"));
+
+// GET /api/admin/uploads — the media library (list of uploaded images).
+router.get("/", async (_request: Request, response: Response) => {
+  try {
+    const names = await listImages();
+    const items = names.map((name) => ({ name, url: `/api/uploads/${name}` }));
+    response.json({ ok: true, items });
+  } catch (error) {
+    logger.error({ err: error }, "Listing media failed");
+    response.status(500).json({
+      ok: false,
+      error: "LIST_FAILED",
+      message: "تعذر تحميل مكتبة الوسائط. تأكد من تفعيل التخزين.",
+    });
+  }
+});
+
+// DELETE /api/admin/uploads/:name — remove an uploaded image.
+router.delete("/:name", async (request: Request, response: Response) => {
+  try {
+    const name = String(request.params.name ?? "");
+    if (!isSafeObjectName(name)) {
+      response
+        .status(400)
+        .json({ ok: false, error: "INVALID_NAME", message: "اسم غير صالح." });
+      return;
+    }
+
+    await deleteImage(name);
+    await writeAuditLog({
+      request,
+      action: "delete",
+      entityType: "media",
+      entityId: name,
+    });
+
+    response.json({ ok: true, name });
+  } catch (error) {
+    logger.error({ err: error }, "Deleting media failed");
+    response.status(500).json({
+      ok: false,
+      error: "DELETE_FAILED",
+      message: "تعذر حذف الملف.",
+    });
+  }
+});
 
 // POST /api/admin/uploads — raw binary body (the file), with its mime type in
 // the Content-Type header. Returns the public URL to reference in content.

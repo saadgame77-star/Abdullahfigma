@@ -75,6 +75,18 @@ export const siteContentApi = {
     );
   },
 
+  listUploads() {
+    return request<{ ok: true; items: { name: string; url: string }[] }>(
+      "/admin/uploads",
+    );
+  },
+
+  deleteUpload(name: string) {
+    return request<{ ok: true; name: string }>(`/admin/uploads/${name}`, {
+      method: "DELETE",
+    });
+  },
+
   // Uploads an image (raw binary body) and returns its public URL.
   async uploadImage(file: File): Promise<{ url: string; name: string }> {
     const response = await fetch(
