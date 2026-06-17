@@ -5,6 +5,13 @@
 
 export type NavLink = { label: string; href: string };
 
+export type ContactChannel = {
+  title: string;
+  description: string;
+  href: string;
+  label: string;
+};
+
 export type PageHeader = { badge: string; title: string; description: string };
 
 export type HomeSectionKey = "latest" | "shorts" | "stats";
@@ -29,6 +36,7 @@ export type SiteContent = {
   };
   brand: {
     logoText: string;
+    logoUrl: string;
     siteTitle: string;
     siteSubtitle: string;
   };
@@ -69,7 +77,11 @@ export type SiteContent = {
     words: PageHeader & { searchPlaceholder: string };
     shorts: { title: string; searchPlaceholder: string };
     recitations: { title: string; searchPlaceholder: string };
-    schedule: { title: string; searchPlaceholder: string };
+    schedule: {
+      title: string;
+      searchPlaceholder: string;
+      announcementImageUrl: string;
+    };
     contact: {
       title: string;
       intro: string;
@@ -79,6 +91,7 @@ export type SiteContent = {
       channelsSubtitle: string;
       channelsEmptyTitle: string;
       channelsEmptyMessage: string;
+      channels: ContactChannel[];
       tipsTitle: string;
       tips: string[];
       formTitle: string;
@@ -117,6 +130,7 @@ export const defaultSiteContent: SiteContent = {
   },
   brand: {
     logoText: "ع",
+    logoUrl: "",
     siteTitle: "عبدالله بن سعد آل غلفيص",
     siteSubtitle: "الموقع الرسمي للشيخ",
   },
@@ -213,6 +227,7 @@ export const defaultSiteContent: SiteContent = {
     schedule: {
       title: "جدول المحاضرات والدروس",
       searchPlaceholder: "ابحث باسم الدرس أو الموعد...",
+      announcementImageUrl: "",
     },
     contact: {
       title: "تواصل معنا",
@@ -226,6 +241,7 @@ export const defaultSiteContent: SiteContent = {
       channelsEmptyTitle: "سيتم إضافة القنوات الرسمية قريبًا",
       channelsEmptyMessage:
         "ستظهر هنا روابط القنوات الرسمية بعد اعتمادها، مثل قناة يوتيوب أو أي وسيلة تواصل أخرى تقررها إدارة الموقع.",
+      channels: [],
       tipsTitle: "قبل إرسال الرسالة",
       tips: [
         "اكتب عنوانًا واضحًا ومختصرًا للرسالة.",

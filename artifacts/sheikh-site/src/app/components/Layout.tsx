@@ -78,10 +78,18 @@ export function Layout() {
               to="/"
               className="flex min-w-0 items-center gap-3 sm:gap-5 group"
             >
-              <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45 group-hover:rotate-0 transition-transform duration-500 shadow-lg border-2 border-[var(--color-islamic-green)] outline outline-1 outline-[var(--color-islamic-gold)]">
-                <span className="font-serif text-2xl sm:text-3xl text-[var(--color-islamic-green)] -rotate-45 group-hover:rotate-0 transition-transform duration-500 font-bold">
-                  {content.brand.logoText}
-                </span>
+              <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45 group-hover:rotate-0 transition-transform duration-500 shadow-lg border-2 border-[var(--color-islamic-green)] outline outline-1 outline-[var(--color-islamic-gold)] overflow-hidden">
+                {content.brand.logoUrl ? (
+                  <img
+                    src={content.brand.logoUrl}
+                    alt={content.brand.siteTitle}
+                    className="h-3/4 w-3/4 -rotate-45 object-contain group-hover:rotate-0 transition-transform duration-500"
+                  />
+                ) : (
+                  <span className="font-serif text-2xl sm:text-3xl text-[var(--color-islamic-green)] -rotate-45 group-hover:rotate-0 transition-transform duration-500 font-bold">
+                    {content.brand.logoText}
+                  </span>
+                )}
               </div>
 
               <div className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-3 whitespace-nowrap text-center sm:text-right">
@@ -204,10 +212,18 @@ export function Layout() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45">
-                  <span className="font-serif text-xl text-[var(--color-islamic-green-dark)] -rotate-45 font-bold">
-                    {content.brand.logoText}
-                  </span>
+                <div className="w-10 h-10 bg-[var(--color-islamic-gold)] rounded-sm flex items-center justify-center transform rotate-45 overflow-hidden">
+                  {content.brand.logoUrl ? (
+                    <img
+                      src={content.brand.logoUrl}
+                      alt={content.footer.title}
+                      className="h-3/4 w-3/4 -rotate-45 object-contain"
+                    />
+                  ) : (
+                    <span className="font-serif text-xl text-[var(--color-islamic-green-dark)] -rotate-45 font-bold">
+                      {content.brand.logoText}
+                    </span>
+                  )}
                 </div>
 
                 <h2 className="font-serif text-2xl text-white">

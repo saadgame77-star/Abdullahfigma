@@ -7,26 +7,9 @@ import {
 } from "lucide-react";
 import { useSiteContent } from "../components/SiteContentProvider";
 
-type ContactLink = {
-  title: string;
-  description: string;
-  href: string;
-  label: string;
-};
-
-const officialLinks: ContactLink[] = [
-  // أضف الروابط الرسمية هنا بعد اعتمادها
-  // مثال:
-  // {
-  //   title: "القناة الرسمية في يوتيوب",
-  //   description: "القناة المعتمدة لنشر الدروس والمحاضرات والمقاطع.",
-  //   href: "https://www.youtube.com/@example",
-  //   label: "فتح القناة",
-  // },
-];
-
 export function Contact() {
   const page = useSiteContent().pages.contact;
+  const officialLinks = page.channels;
   const hasOfficialLinks = officialLinks.length > 0;
 
   return (

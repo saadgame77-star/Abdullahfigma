@@ -16,7 +16,6 @@ import { publicApi, type PublicScheduleItem } from "../lib/publicApi";
 import { useSiteContent } from "../components/SiteContentProvider";
 import { usePublicData } from "../lib/usePublicData";
 
-const officialScheduleImageUrl = "";
 
 function statusClass(status: string) {
   if (status === "قائم") {
@@ -58,6 +57,7 @@ function getWhenText(item: PublicScheduleItem) {
 
 export function Schedule() {
   const page = useSiteContent().pages.schedule;
+  const officialScheduleImageUrl = page.announcementImageUrl;
   const [searchTerm, setSearchTerm] = useState("");
   const [activeKind, setActiveKind] = useState("الكل");
   const [activeStatus, setActiveStatus] = useState("الكل");

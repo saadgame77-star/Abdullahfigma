@@ -20,6 +20,7 @@ import {
 import {
   defaultSiteContent,
   mergeSiteContent,
+  type ContactChannel,
   type HomeSection,
   type NavLink,
   type SiteContent,
@@ -321,9 +322,14 @@ export function SiteContentManager() {
 
           <Group title="العلامة (الترويسة)">
             <TextField
-              label="حرف/رمز الشعار"
+              label="حرف/رمز الشعار (يظهر إن لم تضع صورة)"
               value={content.brand.logoText}
               onChange={(v) => edit((d) => (d.brand.logoText = v))}
+            />
+            <TextField
+              label="رابط صورة الشعار (اختياري)"
+              value={content.brand.logoUrl}
+              onChange={(v) => edit((d) => (d.brand.logoUrl = v))}
             />
             <TextField
               label="السطر العلوي"
@@ -538,6 +544,13 @@ export function SiteContentManager() {
                 edit((d) => (d.pages.schedule.searchPlaceholder = v))
               }
             />
+            <TextField
+              label="رابط صورة الإعلان الرسمي (اختياري)"
+              value={content.pages.schedule.announcementImageUrl}
+              onChange={(v) =>
+                edit((d) => (d.pages.schedule.announcementImageUrl = v))
+              }
+            />
           </Group>
 
           <Group title="صفحة: تواصل معنا">
@@ -587,10 +600,16 @@ export function SiteContentManager() {
               }
             />
             <TextArea
-              label="نص الحالة الفارغة"
+              label="نص الحالة الفارغة (يظهر إن لم تضف قنوات)"
               value={content.pages.contact.channelsEmptyMessage}
               onChange={(v) =>
                 edit((d) => (d.pages.contact.channelsEmptyMessage = v))
+              }
+            />
+            <ChannelsEditor
+              items={content.pages.contact.channels}
+              onChange={(items) =>
+                edit((d) => (d.pages.contact.channels = items))
               }
             />
 
@@ -1049,6 +1068,80 @@ function HomeSectionsEditor({
           </label>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ChannelsEditor({
+  items,
+  onChange,
+}: {
+  items: ContactChannel[];
+  onChange: (items: ContactChannel[]) => void;
+}) {
+  function update(index: number, patch: Partial<ContactChannel>) {
+    onChange(items.map((it, i) => (i === index ? { ...it, ...patch } : it)));
+  }
+  function remove(index: number) {
+    onChange(items.filter((_, i) => i !== index));
+  }
+  function add() {
+    onChange([
+      ...items,
+      { title: "قناة جديدة", description: "", href: "https://", label: "فتح" },
+    ]);
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.map((item, index) => (
+        <div
+          key={index}
+          className="space-y-2 rounded-sm border border-gray-200 bg-gray-50 p-3"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-500">
+              قناة {index + 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              className="rounded-sm p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+              aria-label="حذف"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+          <TextField
+            label="العنوان"
+            value={item.title}
+            onChange={(v) => update(index, { title: v })}
+          />
+          <TextField
+            label="الوصف"
+            value={item.description}
+            onChange={(v) => update(index, { description: v })}
+          />
+          <TextField
+            label="الرابط"
+            value={item.href}
+            onChange={(v) => update(index, { href: v })}
+          />
+          <TextField
+            label="نص الزر"
+            value={item.label}
+            onChange={(v) => update(index, { label: v })}
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="inline-flex items-center gap-1.5 rounded-sm border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:border-[var(--color-islamic-gold)]"
+      >
+        <Plus className="h-4 w-4" />
+        إضافة قناة
+      </button>
     </div>
   );
 }
