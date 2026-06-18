@@ -1,0 +1,91 @@
+diff --git a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+index 89a0a1c..0ca8f7f 100644
+--- a/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
++++ b/artifacts/sheikh-site/src/app/components/admin/SiteContentManager.tsx
+@@ -7,10 +7,13 @@ import {
+   Loader2,
+   Maximize2,
+   Minimize2,
++  Monitor,
+   Plus,
+   RefreshCw,
+   Rocket,
+   Save,
++  Smartphone,
++  Tablet,
+   Trash2,
+   Upload,
+   X,
+@@ -98,6 +101,9 @@ export function SiteContentManager() {
+   const [versionsOpen, setVersionsOpen] = useState(false);
+   const [tab, setTab] = useState("appearance");
+   const [previewFullscreen, setPreviewFullscreen] = useState(false);
++  const [previewDevice, setPreviewDevice] = useState<
++    "desktop" | "tablet" | "mobile"
++  >("desktop");
+ 
+   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+   const previewReady = useRef(false);
+@@ -915,11 +921,34 @@ export function SiteContentManager() {
+               : "xl:sticky xl:top-4 xl:self-start"
+           }
+         >
+-          <div className="mb-2 flex items-center justify-between">
++          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+             <span className="inline-flex items-center gap-2 text-sm font-bold text-gray-700">
+               <Eye className="h-4 w-4" /> معاينة حيّة — انقر النص لتحريره
+             </span>
+             <div className="flex items-center gap-2">
++              <div className="flex items-center gap-0.5 rounded-sm border border-gray-200 p-0.5">
++                {(
++                  [
++                    { id: "desktop", icon: Monitor, label: "سطح المكتب" },
++                    { id: "tablet", icon: Tablet, label: "لوحي" },
++                    { id: "mobile", icon: Smartphone, label: "جوال" },
++                  ] as const
++                ).map((device) => (
++                  <button
++                    key={device.id}
++                    type="button"
++                    title={device.label}
++                    onClick={() => setPreviewDevice(device.id)}
++                    className={`rounded-sm p-1.5 transition-colors ${
++                      previewDevice === device.id
++                        ? "bg-[var(--color-islamic-green)] text-white"
++                        : "text-gray-500 hover:bg-gray-100"
++                    }`}
++                  >
++                    <device.icon className="h-3.5 w-3.5" />
++                  </button>
++                ))}
++              </div>
+               <button
+                 type="button"
+                 onClick={refreshPreview}
+@@ -948,7 +977,7 @@ export function SiteContentManager() {
+             </div>
+           </div>
+           <div
+-            className={`overflow-hidden rounded-sm border border-gray-200 bg-white ${
++            className={`flex justify-center overflow-auto rounded-sm border border-gray-200 bg-gray-100 ${
+               previewFullscreen ? "flex-1" : ""
+             }`}
+           >
+@@ -956,7 +985,16 @@ export function SiteContentManager() {
+               ref={iframeRef}
+               src={PREVIEW_SRC}
+               title="معاينة الموقع"
+-              className={previewFullscreen ? "h-full w-full" : "h-[78vh] w-full"}
++              style={{
++                width:
++                  previewDevice === "desktop"
++                    ? "100%"
++                    : previewDevice === "tablet"
++                      ? "820px"
++                      : "390px",
++                maxWidth: "100%",
++              }}
++              className={`${previewFullscreen ? "h-full" : "h-[78vh]"} border-0 bg-white`}
+             />
+           </div>
+         </div>
