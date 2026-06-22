@@ -1,0 +1,62 @@
+diff --git a/.replit b/.replit
+index 04c52ed..c5a6a92 100644
+--- a/.replit
++++ b/.replit
+@@ -4,6 +4,8 @@ run = "pnpm run dev:sheikh"
+ [deployment]
+ router = "application"
+ deploymentTarget = "autoscale"
++build = ["pnpm", "run", "build:deploy"]
++run = ["pnpm", "run", "start:deploy"]
+ 
+ [deployment.postBuild]
+ args = ["pnpm", "store", "prune"]
+diff --git a/artifacts/api-server/src/app.ts b/artifacts/api-server/src/app.ts
+index 96a8d04..6e72914 100644
+--- a/artifacts/api-server/src/app.ts
++++ b/artifacts/api-server/src/app.ts
+@@ -1,4 +1,5 @@
+ import express, { type Express } from "express";
++import path from "node:path";
+ import cors from "cors";
+ import cookieParser from "cookie-parser";
+ import pinoHttp from "pino-http";
+@@ -60,4 +61,24 @@ app.use(cookieParser());
+ 
+ app.use("/api", router);
+ 
++// In production (single-process deploy) the same server serves the built
++// frontend and falls back to index.html for client-side routes. Enabled via
++// SERVE_CLIENT so the dev workflow (Vite) is unaffected.
++if (process.env.SERVE_CLIENT === "true") {
++  const clientDir =
++    process.env.SITE_DIST ??
++    path.resolve(process.cwd(), "artifacts/sheikh-site/dist/public");
++
++  app.use(express.static(clientDir));
++
++  // SPA fallback: any non-API GET returns the app shell.
++  app.use((request, response, next) => {
++    if (request.method !== "GET" || request.path.startsWith("/api")) {
++      next();
++      return;
++    }
++    response.sendFile(path.join(clientDir, "index.html"));
++  });
++}
++
+ export default app;
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index 80911cb..ba24079 100644
+--- a/package.json
++++ b/package.json
+@@ -5,6 +5,8 @@
+   "scripts": {
+     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+     "dev:sheikh": "node scripts/dev-sheikh.mjs",
++    "build:deploy": "pnpm --filter @workspace/api-server run build && NODE_ENV=production pnpm --filter @workspace/sheikh-site run build",
++    "start:deploy": "NODE_ENV=production SERVE_CLIENT=true node artifacts/api-server/dist/index.mjs",
+     "build": "pnpm run typecheck && pnpm -r --if-present run build",
+     "typecheck:libs": "tsc --build",
+     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"

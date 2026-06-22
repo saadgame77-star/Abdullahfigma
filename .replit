@@ -4,6 +4,8 @@ run = "pnpm run dev:sheikh"
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
+build = ["pnpm", "run", "build:deploy"]
+run = ["pnpm", "run", "start:deploy"]
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]

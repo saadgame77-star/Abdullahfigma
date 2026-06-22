@@ -1,4 +1,5 @@
 import express, { type Express } from "express";
+import path from "node:path";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
@@ -59,5 +60,25 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 
 app.use("/api", router);
+
+// In production (single-process deploy) the same server serves the built
+// frontend and falls back to index.html for client-side routes. Enabled via
+// SERVE_CLIENT so the dev workflow (Vite) is unaffected.
+if (process.env.SERVE_CLIENT === "true") {
+  const clientDir =
+    process.env.SITE_DIST ??
+    path.resolve(process.cwd(), "artifacts/sheikh-site/dist/public");
+
+  app.use(express.static(clientDir));
+
+  // SPA fallback: any non-API GET returns the app shell.
+  app.use((request, response, next) => {
+    if (request.method !== "GET" || request.path.startsWith("/api")) {
+      next();
+      return;
+    }
+    response.sendFile(path.join(clientDir, "index.html"));
+  });
+}
 
 export default app;
